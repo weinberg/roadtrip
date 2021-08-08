@@ -5,7 +5,7 @@ import (
   "errors"
   "fmt"
   pb "github.com/brickshot/roadtrip/internal/grpc"
-  "github.com/brickshot/roadtrip/internal/server/memoryDataProvider"
+  "github.com/brickshot/roadtrip/internal/server/mongoData"
   . "github.com/brickshot/roadtrip/internal/server/types"
   "google.golang.org/grpc"
   "google.golang.org/grpc/codes"
@@ -15,7 +15,7 @@ import (
   "net"
 )
 
-var dp DataProvider = memoryDataProvider.MemoryDataProvider{}
+var dp DataProvider
 
 const (
   port = ":9066"
@@ -133,6 +133,9 @@ func main() {
     log.Fatalf("Error %v", err)
   }
   fmt.Printf("Server is listening on %v...", address)
+
+  fmt.Printf("Connecting to data provider...")
+  dp = mongoData.Init(mongoData.Config{ URI: "mongodb://root:example@localhost:27017" })
 
   s := grpc.NewServer()
   pb.RegisterRoadTripPlayerServer(s, &playerServer{})

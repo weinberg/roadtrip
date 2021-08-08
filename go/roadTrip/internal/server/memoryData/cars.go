@@ -1,4 +1,4 @@
-package memoryDataProvider
+package memoryData
 
 import (
   "errors"
@@ -25,7 +25,7 @@ func resetCars() {
 }
 
 // StoreCar stores a car in the datastore. The UUID will be assigned.
-func (d MemoryDataProvider) NewCar(c Car) (Car, error) {
+func (d Provider) NewCar(c Car) (Car, error) {
   carsMutex.Lock()
   defer carsMutex.Unlock()
 
@@ -41,7 +41,7 @@ func (d MemoryDataProvider) NewCar(c Car) (Car, error) {
 }
 
 // GetCar returns the car referenced by UUID
-func (d MemoryDataProvider) GetCar(UUID string) (Car, error) {
+func (d Provider) GetCar(UUID string) (Car, error) {
   carsMutex.Lock()
   defer carsMutex.Unlock()
 
@@ -55,7 +55,7 @@ func (d MemoryDataProvider) GetCar(UUID string) (Car, error) {
 }
 
 // GetCharacters returns the characters in a car.
-func (d MemoryDataProvider) GetCharacters(UUID string) ([]Character, error) {
+func (d Provider) GetCharacters(UUID string) ([]Character, error) {
   _, err := d.GetCar(UUID)
   if err != nil {
     return []Character{}, err

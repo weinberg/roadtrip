@@ -1,4 +1,4 @@
-package memoryDataProvider_test
+package memoryData_test
 
 import (
 	"testing"

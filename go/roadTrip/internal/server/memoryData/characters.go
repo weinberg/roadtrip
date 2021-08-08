@@ -1,4 +1,4 @@
-package memoryDataProvider
+package memoryData
 
 import (
   "errors"
@@ -19,7 +19,7 @@ func resetCharacters() {
   characters = map[string]Character{}
 }
 
-func (d MemoryDataProvider) GetCharacter(UUID string) (Character, error) {
+func (d Provider) GetCharacter(UUID string) (Character, error) {
   charactersMutex.Lock()
   defer charactersMutex.Unlock()
 
@@ -34,7 +34,7 @@ func (d MemoryDataProvider) GetCharacter(UUID string) (Character, error) {
   return Character{}, errors.New("Not found")
 }
 
-func (d MemoryDataProvider) StoreCharacter(c Character) error {
+func (d Provider) StoreCharacter(c Character) error {
   charactersMutex.Lock()
   defer charactersMutex.Unlock()
 
@@ -49,7 +49,7 @@ func (d MemoryDataProvider) StoreCharacter(c Character) error {
 }
 
 // SetCar sets the characters car. Accepts "" as no car.
-func (d MemoryDataProvider) SetCar(charUUID string, carUUID string) (Character, error) {
+func (d Provider) SetCar(charUUID string, carUUID string) (Character, error) {
   char, err := d.GetCharacter(charUUID)
   if err != nil {
     return Character{}, err

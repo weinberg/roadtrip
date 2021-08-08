@@ -1,4 +1,4 @@
-package memoryDataProvider
+package memoryData
 
 import (
   . "github.com/brickshot/roadtrip/internal/server/types"
@@ -7,16 +7,17 @@ import (
 )
 
 var _ = Describe("Data", func() {
+  var p Provider = Provider{}
   BeforeEach(func() {
     resetCars()
   })
   Describe("Creating a car", func() {
     Context("when input is valid", func() {
       It("should store the car", func() {
-        car, err := NewCar(Car{Name: "Saab"})
+        car, err := p.NewCar(Car{Name: "Saab"})
         Expect(err).To(BeNil())
         Expect(cars[car.UUID]).To(Equal(car))
-        c, err := GetCar(car.UUID)
+        c, err := p.GetCar(car.UUID)
         Expect(err).To(BeNil())
         Expect(cars[car.UUID].UUID).To(Equal(c.UUID))
         Expect(cars[car.UUID].Name).To(Equal(c.Name))
@@ -26,9 +27,9 @@ var _ = Describe("Data", func() {
   Describe("Getting a car", func() {
     Context("which exists", func() {
       It("should return car", func() {
-        newCar, err := NewCar(Car{Name: "Maserati"})
+        newCar, err := p.NewCar(Car{Name: "Maserati"})
         Expect(err).To(BeNil())
-        getCar, err := GetCar(newCar.UUID)
+        getCar, err := p.GetCar(newCar.UUID)
         Expect(err).To(BeNil())
         Expect(getCar).To(Equal(newCar))
       })

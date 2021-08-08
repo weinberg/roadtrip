@@ -1,4 +1,4 @@
-package memoryDataProvider
+package memoryData
 
 import (
   . "github.com/brickshot/roadtrip/internal/server/types"
@@ -8,6 +8,7 @@ import (
 )
 
 var _ = Describe("Data", func() {
+  var p Provider = Provider{}
   Describe("Storing a character", func() {
     var (
       character Character
@@ -23,8 +24,8 @@ var _ = Describe("Data", func() {
         character.UUID = uuid.NewString()
       })
       It("should store the character", func() {
-        StoreCharacter(character)
-        c, _ := GetCharacter(character.UUID)
+        p.StoreCharacter(character)
+        c, _ := p.GetCharacter(character.UUID)
         Expect(characters[character.UUID]).To(Equal(c))
       })
     })
@@ -34,11 +35,11 @@ var _ = Describe("Data", func() {
       })
       It("should error", func() {
         var err error
-        err = StoreCharacter(character)
+        err = p.StoreCharacter(character)
         Expect(err).NotTo(BeNil())
         Expect(err.Error()).To(Equal("Invalid UUID"))
 
-        _, err = GetCharacter(character.UUID)
+        _, err = p.GetCharacter(character.UUID)
         Expect(err).NotTo(BeNil())
         Expect(err.Error()).To(Equal("Not found"))
       })
@@ -58,14 +59,14 @@ var _ = Describe("Data", func() {
     })
     Context("When character exists", func() {
       It("should return the character", func() {
-        StoreCharacter(character)
+        p.StoreCharacter(character)
         Expect(characters[character.UUID]).To(Equal(character))
       })
     })
     Context("When character does not exists", func() {
       It("should error", func() {
-        StoreCharacter(character)
-        _, err := GetCharacter(uuid.NewString())
+        p.StoreCharacter(character)
+        _, err := p.GetCharacter(uuid.NewString())
         Expect(err.Error()).To(Equal("Not found"))
       })
     })
@@ -81,20 +82,20 @@ var _ = Describe("Data", func() {
         Name: "Josh Weinberg",
         UUID: uuid.NewString(),
       }
-      StoreCharacter(character)
+      p.StoreCharacter(character)
     })
     Context("When input is valid", func() {
       It("should return the car on the character", func() {
-        car, _ := NewCar(Car{Name: "Ford"})
-        char, err := SetCar(character.UUID, car.UUID)
+        car, _ := p.NewCar(Car{Name: "Ford"})
+        char, err := p.SetCar(character.UUID, car.UUID)
         Expect(err).To(BeNil())
         Expect(char.Car.UUID).To(Equal(car.UUID))
       })
       It("should allow unsetting the car", func() {
-        car, _ := NewCar(Car{Name: "Ford"})
-        c,_ := SetCar(character.UUID, car.UUID)
+        car, _ := p.NewCar(Car{Name: "Ford"})
+        c,_ := p.SetCar(character.UUID, car.UUID)
         Expect(c.Car.UUID).To(Equal(car.UUID))
-        char, err := SetCar(character.UUID, "")
+        char, err := p.SetCar(character.UUID, "")
         Expect(err).To(BeNil())
         Expect(char.Car).To(BeNil())
       })

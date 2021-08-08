@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package roadtrip;
+
+option go_package = "insofar.com/roadTrip/grpc";
+
+// Interface exported by the server.
+
+// RoadTripPlayer service provides access to player information.
+
+service RoadTripPlayer  {
+  rpc GetCharacter(Empty) returns (Character) {}
+  rpc NewCharacter(NewCharacterRequest) returns (Character) {}
+  rpc GetCar(Empty) returns (Car) {}
+  rpc NewCar(NewCarRequest) returns (Car) {}
+  rpc NameCar(NameCarRequest) returns (Car) {}
+}
+
+message Character {
+  string uuid = 1;
+  string name = 2;
+}
+
+message NewCharacterRequest {
+  string uuid = 1;
+  string name = 2;
+}
+
+message Empty {
+}
+
+message NameCarRequest {
+  string name = 1;
+}
+
+message Car {
+  string uuid = 1;
+  string plate = 2;
+  string name = 3;
+}
+
+message NewCarRequest {
+  string name = 1;
+}

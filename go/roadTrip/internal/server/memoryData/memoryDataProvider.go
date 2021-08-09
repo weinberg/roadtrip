@@ -1,8 +1,22 @@
 package memoryData
 
-type Provider struct {
+import "github.com/brickshot/roadtrip/internal/server/types"
+
+type MemoryProvider struct {
+  types.DataProvider
 }
 
-func (d Provider) Init() {
+type Config struct {
+  types.InitConfig
+}
 
+func (d MemoryProvider) Init(c Config) MemoryProvider {
+  InitCars()
+  InitCharacters()
+  return d
+}
+
+func (d MemoryProvider) Shutdown() {
+  ShutdownCars()
+  ShutdownCharacters()
 }

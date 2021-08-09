@@ -7,7 +7,7 @@ import (
 )
 
 var _ = Describe("Data", func() {
-  var p Provider = Provider{}
+  var p MemoryProvider = MemoryProvider{}
   BeforeEach(func() {
     resetCars()
   })

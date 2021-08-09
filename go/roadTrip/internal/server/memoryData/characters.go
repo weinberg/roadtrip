@@ -11,7 +11,7 @@ var charactersMutex = &sync.Mutex{}
 var characters map[string]Character
 
 // init
-func init() {
+func InitCharacters() {
   characters = map[string]Character{}
 }
 
@@ -19,7 +19,11 @@ func resetCharacters() {
   characters = map[string]Character{}
 }
 
-func (d Provider) GetCharacter(UUID string) (Character, error) {
+func ShutdownCharacters() {
+  characters = nil
+}
+
+func (d MemoryProvider) GetCharacter(UUID string) (Character, error) {
   charactersMutex.Lock()
   defer charactersMutex.Unlock()
 
@@ -34,7 +38,7 @@ func (d Provider) GetCharacter(UUID string) (Character, error) {
   return Character{}, errors.New("Not found")
 }
 
-func (d Provider) StoreCharacter(c Character) error {
+func (d MemoryProvider) StoreCharacter(c Character) error {
   charactersMutex.Lock()
   defer charactersMutex.Unlock()
 
@@ -49,7 +53,7 @@ func (d Provider) StoreCharacter(c Character) error {
 }
 
 // SetCar sets the characters car. Accepts "" as no car.
-func (d Provider) SetCar(charUUID string, carUUID string) (Character, error) {
+func (d MemoryProvider) SetCar(charUUID string, carUUID string) (Character, error) {
   char, err := d.GetCharacter(charUUID)
   if err != nil {
     return Character{}, err

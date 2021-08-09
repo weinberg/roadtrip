@@ -8,7 +8,7 @@ import (
 )
 
 var _ = Describe("Data", func() {
-  var p Provider = Provider{}
+  var p MemoryProvider = MemoryProvider{}
   Describe("Storing a character", func() {
     var (
       character Character

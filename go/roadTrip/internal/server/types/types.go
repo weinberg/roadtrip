@@ -20,7 +20,12 @@ type Character struct {
  * Interfaces
  */
 
+type InitConfig struct {
+}
+
 type DataProvider interface {
+  Init(c InitConfig) (DataProvider)
+  Shutdown()
   NewCar(c Car) (Car, error)
   GetCar(UUID string) (Car, error)
   GetCharacters(UUID string) ([]Character, error)

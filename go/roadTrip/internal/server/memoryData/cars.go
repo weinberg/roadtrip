@@ -16,8 +16,12 @@ var cars map[string]Car
  */
 
 // init
-func init() {
+func InitCars() {
   cars = map[string]Car{}
+}
+
+func ShutdownCars() {
+  cars = nil
 }
 
 func resetCars() {
@@ -25,7 +29,7 @@ func resetCars() {
 }
 
 // StoreCar stores a car in the datastore. The UUID will be assigned.
-func (d Provider) NewCar(c Car) (Car, error) {
+func (d MemoryProvider) NewCar(c Car) (Car, error) {
   carsMutex.Lock()
   defer carsMutex.Unlock()
 
@@ -41,7 +45,7 @@ func (d Provider) NewCar(c Car) (Car, error) {
 }
 
 // GetCar returns the car referenced by UUID
-func (d Provider) GetCar(UUID string) (Car, error) {
+func (d MemoryProvider) GetCar(UUID string) (Car, error) {
   carsMutex.Lock()
   defer carsMutex.Unlock()
 
@@ -55,7 +59,7 @@ func (d Provider) GetCar(UUID string) (Car, error) {
 }
 
 // GetCharacters returns the characters in a car.
-func (d Provider) GetCharacters(UUID string) ([]Character, error) {
+func (d MemoryProvider) GetCharacters(UUID string) ([]Character, error) {
   _, err := d.GetCar(UUID)
   if err != nil {
     return []Character{}, err

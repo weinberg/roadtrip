@@ -3,6 +3,7 @@ package mongoData
 import (
   "context"
   "fmt"
+  "github.com/brickshot/roadtrip/internal/server/types"
   "go.mongodb.org/mongo-driver/bson"
   "go.mongodb.org/mongo-driver/mongo"
   "go.mongodb.org/mongo-driver/mongo/options"
@@ -10,16 +11,21 @@ import (
   "time"
 )
 
-type Provider struct {
+type MongoProvider struct {
+  types.DataProvider
 }
+
+var client *mongo.Client
+var database *mongo.Database
 
 type Config struct {
   URI string
+  types.InitConfig
 }
 
-func Init(c Config) (p Provider) {
-  p = Provider{}
-  client, err := mongo.NewClient(options.Client().ApplyURI(c.URI))
+func (p MongoProvider) Init (c Config) MongoProvider {
+  var err error
+  client, err = mongo.NewClient(options.Client().ApplyURI(c.URI))
   if err != nil {
     log.Fatal(err)
   }
@@ -28,7 +34,8 @@ func Init(c Config) (p Provider) {
   if err != nil {
     log.Fatal(err)
   }
-  defer client.Disconnect(ctx)
+
+  database = client.Database("roadtrip")
 
   /*
      List databases
@@ -39,5 +46,16 @@ func Init(c Config) (p Provider) {
   }
   fmt.Println(databases)
 
+
+  // Init collections
+  InitCharacters()
+  InitCars()
   return p
+}
+
+func (p MongoProvider) Shutdown() {
+  ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+  if err := client.Disconnect(ctx); err != nil {
+    panic(err)
+  }
 }

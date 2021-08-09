@@ -15,7 +15,8 @@ import (
   "net"
 )
 
-var dp DataProvider
+var dp mongoData.MongoProvider
+// var dp memoryData.MemoryProvider
 
 const (
   port = ":9066"
@@ -135,7 +136,12 @@ func main() {
   fmt.Printf("Server is listening on %v...", address)
 
   fmt.Printf("Connecting to data provider...")
-  dp = mongoData.Init(mongoData.Config{ URI: "mongodb://root:example@localhost:27017" })
+  // MongoData
+  dp = mongoData.MongoProvider{}.Init(mongoData.Config{ URI: "mongodb://root:example@localhost:27017" })
+  defer dp.Shutdown()
+  // MemoryData
+  // dp = memoryData.MemoryProvider{}.Init(memoryData.Config{})
+  // defer dp.Shutdown()
 
   s := grpc.NewServer()
   pb.RegisterRoadTripPlayerServer(s, &playerServer{})

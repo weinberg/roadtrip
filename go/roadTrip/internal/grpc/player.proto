@@ -9,36 +9,40 @@ option go_package = "insofar.com/roadTrip/grpc";
 // RoadTripPlayer service provides access to player information.
 
 service RoadTripPlayer  {
-  rpc GetCharacter(Empty) returns (Character) {}
-  rpc NewCharacter(NewCharacterRequest) returns (Character) {}
-  rpc GetCar(Empty) returns (Car) {}
-  rpc NewCar(NewCarRequest) returns (Car) {}
-  rpc NameCar(NameCarRequest) returns (Car) {}
-}
-
-message Character {
-  string uuid = 1;
-  string name = 2;
-}
-
-message NewCharacterRequest {
-  string uuid = 1;
-  string name = 2;
+  rpc CreateCharacter(CreateCharacterRequest) returns (Character) {}
+  rpc GetCharacter(GetCharacterRequest) returns (Character) {}
+  rpc UpdateCharacter(UpdateCharacterRequest) returns (Character) {}
+  rpc UpdateCar(UpdateCarRequest) returns (Car) {}
 }
 
 message Empty {
 }
 
-message NameCarRequest {
-  string name = 1;
+message Character {
+  string id = 1; // output only
+  string character_name = 2;
+  Car car = 3; // singleton
+}
+
+message GetCharacterRequest {
+  string id = 1;
+}
+
+message CreateCharacterRequest {
+  string captcha_id = 1;
+  string character_name = 2;
+}
+
+message UpdateCharacterRequest {
+  Character character = 1;
+}
+
+message UpdateCarRequest {
+  Car car = 1;
 }
 
 message Car {
-  string uuid = 1;
+  string id = 1; // output only
   string plate = 2;
-  string name = 3;
-}
-
-message NewCarRequest {
-  string name = 1;
+  string car_name = 3;
 }

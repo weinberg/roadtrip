@@ -5,8 +5,8 @@ import (
   "errors"
   "fmt"
   pb "github.com/brickshot/roadtrip/internal/grpc"
+  . "github.com/brickshot/roadtrip/internal/server"
   "github.com/brickshot/roadtrip/internal/server/mongoData"
-  . "github.com/brickshot/roadtrip/internal/server/types"
   "google.golang.org/grpc"
   "google.golang.org/grpc/codes"
   "google.golang.org/grpc/metadata"
@@ -16,6 +16,7 @@ import (
 )
 
 var dp mongoData.MongoProvider
+
 // var dp memoryData.MemoryProvider
 
 const (
@@ -38,93 +39,76 @@ func getUUID(ctx context.Context) (string, error) {
   return "", errors.New("UUID not in metadata")
 }
 
-// NewCharacter creates a new character record in the datastore and returns it. The client specifies
-// the UUID (not in the header but in the request). Errors if UUID already exists.
-func (*playerServer) NewCharacter(ctx context.Context, request *pb.NewCharacterRequest) (*pb.Character, error) {
-  _, error := dp.GetCharacter(request.Uuid)
-  if error == nil {
-    return nil, status.Errorf(codes.AlreadyExists, "NewCharacter: Already exists")
+// CreateCharacter creates a new character record in the datastore and returns it.
+// Car is a singleton associated with character. The new character will get a new car assigned to it.
+func (*playerServer) CreateCharacter(ctx context.Context, request *pb.CreateCharacterRequest) (*pb.Character, error) {
+  if request.CharacterName == "" {
+    return &pb.Character{}, status.Errorf(codes.Internal, "Name required")
   }
 
-  dp.StoreCharacter(Character{UUID: request.Uuid, Name: request.Name})
+  nc, err := dp.CreateCharacter(request.CharacterName)
+  if err != nil {
+    return &pb.Character{}, status.Errorf(codes.Internal, "Could not create character: "+err.Error())
+  }
 
-  return &pb.Character{
-    Uuid: request.Uuid,
-    Name: request.Name,
-  }, nil
+  // create car for new character
+  car, err := dp.CreateCar(Car{}, nc)
+  if err != nil {
+    dp.DeleteCharacter(nc.Id)
+    return &pb.Character{}, status.Errorf(codes.Internal, "Could not create car for new character: "+err.Error())
+  }
+
+  r := &pb.Character{
+    Id: nc.Id,
+    CharacterName: nc.Name,
+    Car: &pb.Car{
+      Id:  car.Id,
+      Plate: car.Plate,
+      CarName:  car.Name,
+    },
+  }
+
+  return r, nil
 }
 
-// GetCharacter returns the character with the given UUID. Errors if UUID not found.
-func (*playerServer) GetCharacter(ctx context.Context, request *pb.Empty) (*pb.Character, error) {
-  UUID, err := getUUID(ctx)
+// GetCharacter returns the character with the given id. Errors if id not found.
+func (*playerServer) GetCharacter(ctx context.Context, request *pb.GetCharacterRequest) (*pb.Character, error) {
+  contextUUID, err := getUUID(ctx)
   if err != nil {
     return nil, err
   }
 
-  c, error := dp.GetCharacter(UUID)
-
-  if error != nil {
-    return nil, status.Errorf(codes.NotFound, "GetCharacter: cannot find character with that UUID")
+  if contextUUID != request.Id  {
+    return nil, status.Errorf(codes.PermissionDenied, "Permission denied for that character ID")
   }
 
-  return &pb.Character{
-    Uuid: c.UUID,
-    Name: c.Name,
-  }, nil
+  ch, err := dp.GetCharacter(contextUUID)
+  if err != nil {
+    return nil, status.Errorf(codes.NotFound, "cannot find character with that UUID")
+  }
 
+  if ch.Car == nil {
+    return nil, status.Errorf(codes.NotFound, "cannot find Car for character")
+  }
+
+  result := &pb.Character{
+    Id: ch.Id,
+    CharacterName: ch.Name,
+    Car: &pb.Car{
+      Id:  ch.Car.Id,
+      Plate: ch.Car.Plate,
+      CarName:  ch.Car.Name,
+    },
+  }
+
+  return result, nil
 }
 
-func (*playerServer) GetCar(ctx context.Context, request *pb.Empty) (*pb.Car, error) {
-  UUID, err := getUUID(ctx)
-  if err != nil {
-    return nil, err
-  }
-
-  c, err := dp.GetCharacter(UUID)
-  if err != nil {
-    return nil, err
-  }
-
-  if c.Car == nil {
-    return nil, status.Errorf(codes.NotFound, "GetCar: cannot find car with that UUID")
-  }
-
-  return &pb.Car{
-    Name:  c.Car.Name,
-    Plate: c.Car.Plate,
-    Uuid:  c.Car.UUID,
-  }, nil
-}
-
-func (*playerServer) NewCar(ctx context.Context, request *pb.NewCarRequest) (*pb.Car, error) {
-  UUID, err := getUUID(ctx)
-  if err != nil {
-    return nil, err
-  }
-
-  car, err := dp.NewCar(Car{Name: request.Name})
-  if err != nil {
-    return nil, status.Errorf(codes.Internal, "Could not create car in data store")
-  }
-
-  _, err2 := dp.SetCar(UUID, car.UUID)
-  if err2 != nil {
-    return nil, status.Errorf(codes.Internal, "Could not assign car to character in data store")
-  }
-
-  return &pb.Car{
-    Name:  car.Name,
-    Plate: car.Plate,
-    Uuid:  car.UUID,
-  }, nil
-}
-
-/*
-func (*playerServer) NameCar(ctx context.Context, request *pb.NameCarRequest) (*pb.Car, error) {
-  carName = request.Name
-  return &pb.Car{Plate: "1", Name: carName}, nil
-}
-*/
+/******************************
+ *
+ * Main
+ *
+ ******************************/
 
 func main() {
   fmt.Println("Server started")
@@ -137,7 +121,7 @@ func main() {
 
   fmt.Printf("Connecting to data provider...")
   // MongoData
-  dp = mongoData.MongoProvider{}.Init(mongoData.Config{ URI: "mongodb://root:example@localhost:27017" })
+  dp = mongoData.MongoProvider{}.Init(mongoData.Config{URI: "mongodb://root:example@localhost:27017"})
   defer dp.Shutdown()
   // MemoryData
   // dp = memoryData.MemoryProvider{}.Init(memoryData.Config{})

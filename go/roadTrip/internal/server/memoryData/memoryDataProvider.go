@@ -1,13 +1,15 @@
 package memoryData
 
-import "github.com/brickshot/roadtrip/internal/server/types"
+import (
+  "github.com/brickshot/roadtrip/internal/server"
+)
 
 type MemoryProvider struct {
-  types.DataProvider
+  server.DataProvider
 }
 
 type Config struct {
-  types.InitConfig
+  server.InitConfig
 }
 
 func (d MemoryProvider) Init(c Config) MemoryProvider {

@@ -1,7 +1,7 @@
 package memoryData
 
 import (
-  . "github.com/brickshot/roadtrip/internal/server/types"
+  . "github.com/brickshot/roadtrip/internal/server"
   "github.com/google/uuid"
   . "github.com/onsi/ginkgo"
   . "github.com/onsi/gomega"

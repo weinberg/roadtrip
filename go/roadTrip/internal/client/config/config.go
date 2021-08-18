@@ -2,7 +2,6 @@ package config
 
 import (
   "errors"
-  "github.com/google/uuid"
   "github.com/kirsle/configdir"
   "gopkg.in/yaml.v2"
   "os"
@@ -15,7 +14,7 @@ type ClientConfig struct {
 }
 
 type CharacterInfo struct {
-  UUID string
+  Id string
 }
 
 // LoadConfig loads the client config from an OS specific location.
@@ -66,15 +65,49 @@ func SaveConfig(conf ClientConfig) error {
   return nil
 }
 
+func NewCharacterInfo(id string) (ClientConfig, CharacterInfo, error) {
+  config, err := LoadConfig()
+  if err != nil {
+    return ClientConfig{}, CharacterInfo{}, err
+  }
+  nc := CharacterInfo{
+    Id: id,
+  }
+  config.Characters = append(config.Characters, nc)
+
+  err = SaveConfig(config)
+  if err != nil {
+    return ClientConfig{}, CharacterInfo{}, err
+  }
+
+  return config, nc, nil
+}
+
+func DeleteCharacterInfo(id string) (ClientConfig, error) {
+  config, err := LoadConfig()
+  if err != nil {
+    return ClientConfig{}, err
+  }
+  newchars := []CharacterInfo{}
+  for _, c := range config.Characters {
+    if c.Id != id {
+      newchars = append(newchars, c)
+    }
+  }
+  config.Characters = newchars
+  err = SaveConfig(config)
+  if err != nil {
+    return ClientConfig{}, err
+  }
+  return config, nil
+}
+
 // initConfig writes a new config file.
 func initConfig() error {
   newConfig := ClientConfig{
-    Server: "localhost",
-    Port:   "9066",
-    Characters: []CharacterInfo{
-      CharacterInfo{
-        UUID: uuid.NewString(),
-      }},
+    Server:     "localhost",
+    Port:       "9066",
+    Characters: []CharacterInfo{},
   }
 
   return SaveConfig(newConfig)

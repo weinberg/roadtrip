@@ -2,7 +2,7 @@ package memoryData
 
 import (
   "errors"
-  . "github.com/brickshot/roadtrip/internal/server/types"
+  . "github.com/brickshot/roadtrip/internal/server"
   "github.com/google/uuid"
   "sync"
 )
@@ -38,7 +38,22 @@ func (d MemoryProvider) GetCharacter(UUID string) (Character, error) {
   return Character{}, errors.New("Not found")
 }
 
-func (d MemoryProvider) StoreCharacter(c Character) error {
+func (d MemoryProvider) NewCharacter() (Character, error) {
+  charactersMutex.Lock()
+  defer charactersMutex.Unlock()
+
+  uuid := uuid.NewString();
+  nc := Character{
+    UUID: uuid,
+    Name: "",
+    Car:  nil,
+  }
+  characters[uuid] = nc
+
+  return nc, nil
+}
+
+func (d MemoryProvider) DeleteCharacter(c Character) error {
   charactersMutex.Lock()
   defer charactersMutex.Unlock()
 
@@ -47,7 +62,7 @@ func (d MemoryProvider) StoreCharacter(c Character) error {
     return errors.New("Invalid UUID")
   }
 
-  characters[c.UUID] = c
+  delete(characters, c.UUID)
 
   return nil
 }

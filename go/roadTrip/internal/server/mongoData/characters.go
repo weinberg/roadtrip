@@ -3,44 +3,73 @@ package mongoData
 import (
   "context"
   "errors"
-  . "github.com/brickshot/roadtrip/internal/server/types"
+  . "github.com/brickshot/roadtrip/internal/server"
+  "github.com/google/uuid"
   "go.mongodb.org/mongo-driver/bson"
   "go.mongodb.org/mongo-driver/mongo"
   "log"
   "time"
 )
 
-var coll *mongo.Collection
+var charactersColl *mongo.Collection
 
 // init
 func InitCharacters() {
-  coll = database.Collection("characters")
+  charactersColl = database.Collection("characters")
 }
 
 func ShutdownCharacters() {
-  collection = nil
+  charactersColl = nil
 }
 
-func (d MongoProvider) GetCharacter(UUID string) (Character, error) {
-  filter := bson.D{{ "uuid", UUID }}
-  result := Character{}
+// CreateCharacter
+func (d MongoProvider) CreateCharacter(name string) (Character, error) {
+  id := uuid.NewString()
   ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-  err := coll.FindOne(ctx, filter).Decode(&result)
+  _, err := charactersColl.InsertOne(ctx, bson.D{{"id", id}, {"name", name}, {"deleted", false}})
+  if err != nil {
+    return Character{}, err
+  }
+  return Character{
+    Id:   id,
+    Name: name,
+    Car:  nil,
+  }, nil
+}
+
+// GetCharacter returns the Character from the database with it's Car populated
+func (d MongoProvider) GetCharacter(id string) (Character, error) {
+  char := Character{}
+  ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+  err := charactersColl.FindOne(ctx, bson.D{{"id", id}, {"deleted", false}}).Decode(&char)
   if err == mongo.ErrNoDocuments {
-    return Character{}, errors.New("Not found")
+    return Character{}, errors.New("not found")
   } else if err != nil {
     log.Fatal(err)
   }
-  return result, nil
+
+  // Character's car is a singleton so we always return it with the character
+  car := Car{}
+  ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
+  err = carsColl.FindOne(ctx, bson.D{{"owner_id", id}}).Decode(&car)
+  if err == mongo.ErrNoDocuments {
+    return Character{}, errors.New("missing car")
+  } else if err != nil {
+    log.Fatal(err)
+  }
+  char.Car = &car
+
+  return char, nil
 }
 
-func (d MongoProvider) StoreCharacter(c Character) error {
+// DeleteCharacter
+func (d MongoProvider) DeleteCharacter(id string) error {
   ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-  _, err := coll.InsertOne(ctx, bson.D{{"uuid", c.UUID}, {"name", c.Name}})
+  _, err := charactersColl.UpdateOne(ctx, bson.D{{"id", id}}, bson.D{{"deleted", true}})
   return err
 }
 
-// SetCar sets the characters car. Accepts "" as no car.
-func (d MongoProvider) SetCar(charUUID string, carUUID string) (Character, error) {
+// SetCar
+func (d MongoProvider) SetCar(charId string, carUUID string) (Character, error) {
   return Character{}, nil
 }

@@ -3,8 +3,9 @@ package memoryData
 import (
   "errors"
   "fmt"
-  . "github.com/brickshot/roadtrip/internal/server/types"
+  . "github.com/brickshot/roadtrip/internal/server"
   "github.com/google/uuid"
+  gonanoid "github.com/matoous/go-nanoid"
   "sync"
 )
 
@@ -28,15 +29,34 @@ func resetCars() {
   cars = map[string]Car{}
 }
 
-// StoreCar stores a car in the datastore. The UUID will be assigned.
-func (d MemoryProvider) NewCar(c Car) (Car, error) {
+// StoreCar stores a car in the datastore. The UUID and plate will be assigned.
+func (d MemoryProvider) NewCar(c Car, owner Character) (Car, error) {
   carsMutex.Lock()
   defer carsMutex.Unlock()
+
+  var plate string
+  for i := 0; i < 20; i++ {
+    p1, _ := gonanoid.Generate("abcdefghijklmnopqrstuvwxyz", 3)
+    p2, _ := gonanoid.Generate("0123456789", 3)
+    plate = p1 + "-" + p2
+    _, err := d.GetCarByPlate(plate)
+    if err == nil {
+      continue
+    }
+    plate = ""
+  }
+
+  if plate == "" {
+    return Car{}, errors.New("Could not find un-used plate in 20 attempts.")
+  }
+
+  var o Character = characters[owner.UUID]
 
   newCar := Car{
     UUID: uuid.NewString(),
     Name: c.Name,
-    Plate: "",
+    Plate: plate,
+    Owner: &o,
   }
 
   cars[newCar.UUID] = newCar
@@ -56,6 +76,19 @@ func (d MemoryProvider) GetCar(UUID string) (Car, error) {
   }
 
   return cars[UUID], nil
+}
+
+// GetCarByPlate returns the car referenced by Plate
+func (d MemoryProvider) GetCarByPlate(plate string) (Car, error) {
+  carsMutex.Lock()
+  defer carsMutex.Unlock()
+
+  for _,car := range cars {
+    if car.Plate == plate {
+      return car, nil
+    }
+  }
+  return Car{}, errors.New("Car not found")
 }
 
 // GetCharacters returns the characters in a car.

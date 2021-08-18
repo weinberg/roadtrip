@@ -1,17 +1,17 @@
-package types
+package server
 
 /**
  * Structs
  */
 
 type Car struct {
-  UUID       string
+  Id         string
   Name       string
   Plate      string
 }
 
 type Character struct {
-  UUID string
+  Id string
   Name string
   Car  *Car
 }
@@ -26,10 +26,14 @@ type InitConfig struct {
 type DataProvider interface {
   Init(c InitConfig) (DataProvider)
   Shutdown()
-  NewCar(c Car) (Car, error)
-  GetCar(UUID string) (Car, error)
-  GetCharacters(UUID string) ([]Character, error)
+
+  CreateCharacter(name string) (Character, error)
   GetCharacter(UUID string) (Character, error)
-  StoreCharacter(c Character) error
+  DeleteCharacter(UUID string) error
+
+  CreateCar() (Car, error)
   SetCar(charUUID string, carUUID string) (Character, error)
+  GetCar(UUID string) (Car, error)
+  GetCarByPlate(plate string) (Car, error)
+  GetCarByCharacter(UUID string) (Car, error)
 }

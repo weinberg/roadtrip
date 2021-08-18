@@ -3,7 +3,7 @@ package mongoData
 import (
   "context"
   "fmt"
-  "github.com/brickshot/roadtrip/internal/server/types"
+  "github.com/brickshot/roadtrip/internal/server"
   "go.mongodb.org/mongo-driver/bson"
   "go.mongodb.org/mongo-driver/mongo"
   "go.mongodb.org/mongo-driver/mongo/options"
@@ -11,8 +11,10 @@ import (
   "time"
 )
 
+const dbName = "roadtripDB"
+
 type MongoProvider struct {
-  types.DataProvider
+  server.DataProvider
 }
 
 var client *mongo.Client
@@ -20,7 +22,7 @@ var database *mongo.Database
 
 type Config struct {
   URI string
-  types.InitConfig
+  server.InitConfig
 }
 
 func (p MongoProvider) Init (c Config) MongoProvider {
@@ -35,7 +37,7 @@ func (p MongoProvider) Init (c Config) MongoProvider {
     log.Fatal(err)
   }
 
-  database = client.Database("roadtrip")
+  database = client.Database(dbName)
 
   /*
      List databases

@@ -18,11 +18,10 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type RoadTripPlayerClient interface {
-	GetCharacter(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Character, error)
-	NewCharacter(ctx context.Context, in *NewCharacterRequest, opts ...grpc.CallOption) (*Character, error)
-	GetCar(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Car, error)
-	NewCar(ctx context.Context, in *NewCarRequest, opts ...grpc.CallOption) (*Car, error)
-	NameCar(ctx context.Context, in *NameCarRequest, opts ...grpc.CallOption) (*Car, error)
+	CreateCharacter(ctx context.Context, in *CreateCharacterRequest, opts ...grpc.CallOption) (*Character, error)
+	GetCharacter(ctx context.Context, in *GetCharacterRequest, opts ...grpc.CallOption) (*Character, error)
+	UpdateCharacter(ctx context.Context, in *UpdateCharacterRequest, opts ...grpc.CallOption) (*Character, error)
+	UpdateCar(ctx context.Context, in *UpdateCarRequest, opts ...grpc.CallOption) (*Car, error)
 }
 
 type roadTripPlayerClient struct {
@@ -33,7 +32,16 @@ func NewRoadTripPlayerClient(cc grpc.ClientConnInterface) RoadTripPlayerClient {
 	return &roadTripPlayerClient{cc}
 }
 
-func (c *roadTripPlayerClient) GetCharacter(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Character, error) {
+func (c *roadTripPlayerClient) CreateCharacter(ctx context.Context, in *CreateCharacterRequest, opts ...grpc.CallOption) (*Character, error) {
+	out := new(Character)
+	err := c.cc.Invoke(ctx, "/roadtrip.RoadTripPlayer/CreateCharacter", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *roadTripPlayerClient) GetCharacter(ctx context.Context, in *GetCharacterRequest, opts ...grpc.CallOption) (*Character, error) {
 	out := new(Character)
 	err := c.cc.Invoke(ctx, "/roadtrip.RoadTripPlayer/GetCharacter", in, out, opts...)
 	if err != nil {
@@ -42,36 +50,18 @@ func (c *roadTripPlayerClient) GetCharacter(ctx context.Context, in *Empty, opts
 	return out, nil
 }
 
-func (c *roadTripPlayerClient) NewCharacter(ctx context.Context, in *NewCharacterRequest, opts ...grpc.CallOption) (*Character, error) {
+func (c *roadTripPlayerClient) UpdateCharacter(ctx context.Context, in *UpdateCharacterRequest, opts ...grpc.CallOption) (*Character, error) {
 	out := new(Character)
-	err := c.cc.Invoke(ctx, "/roadtrip.RoadTripPlayer/NewCharacter", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/roadtrip.RoadTripPlayer/UpdateCharacter", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *roadTripPlayerClient) GetCar(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Car, error) {
+func (c *roadTripPlayerClient) UpdateCar(ctx context.Context, in *UpdateCarRequest, opts ...grpc.CallOption) (*Car, error) {
 	out := new(Car)
-	err := c.cc.Invoke(ctx, "/roadtrip.RoadTripPlayer/GetCar", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *roadTripPlayerClient) NewCar(ctx context.Context, in *NewCarRequest, opts ...grpc.CallOption) (*Car, error) {
-	out := new(Car)
-	err := c.cc.Invoke(ctx, "/roadtrip.RoadTripPlayer/NewCar", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *roadTripPlayerClient) NameCar(ctx context.Context, in *NameCarRequest, opts ...grpc.CallOption) (*Car, error) {
-	out := new(Car)
-	err := c.cc.Invoke(ctx, "/roadtrip.RoadTripPlayer/NameCar", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/roadtrip.RoadTripPlayer/UpdateCar", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -82,11 +72,10 @@ func (c *roadTripPlayerClient) NameCar(ctx context.Context, in *NameCarRequest, 
 // All implementations must embed UnimplementedRoadTripPlayerServer
 // for forward compatibility
 type RoadTripPlayerServer interface {
-	GetCharacter(context.Context, *Empty) (*Character, error)
-	NewCharacter(context.Context, *NewCharacterRequest) (*Character, error)
-	GetCar(context.Context, *Empty) (*Car, error)
-	NewCar(context.Context, *NewCarRequest) (*Car, error)
-	NameCar(context.Context, *NameCarRequest) (*Car, error)
+	CreateCharacter(context.Context, *CreateCharacterRequest) (*Character, error)
+	GetCharacter(context.Context, *GetCharacterRequest) (*Character, error)
+	UpdateCharacter(context.Context, *UpdateCharacterRequest) (*Character, error)
+	UpdateCar(context.Context, *UpdateCarRequest) (*Car, error)
 	mustEmbedUnimplementedRoadTripPlayerServer()
 }
 
@@ -94,20 +83,17 @@ type RoadTripPlayerServer interface {
 type UnimplementedRoadTripPlayerServer struct {
 }
 
-func (UnimplementedRoadTripPlayerServer) GetCharacter(context.Context, *Empty) (*Character, error) {
+func (UnimplementedRoadTripPlayerServer) CreateCharacter(context.Context, *CreateCharacterRequest) (*Character, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateCharacter not implemented")
+}
+func (UnimplementedRoadTripPlayerServer) GetCharacter(context.Context, *GetCharacterRequest) (*Character, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCharacter not implemented")
 }
-func (UnimplementedRoadTripPlayerServer) NewCharacter(context.Context, *NewCharacterRequest) (*Character, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method NewCharacter not implemented")
+func (UnimplementedRoadTripPlayerServer) UpdateCharacter(context.Context, *UpdateCharacterRequest) (*Character, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateCharacter not implemented")
 }
-func (UnimplementedRoadTripPlayerServer) GetCar(context.Context, *Empty) (*Car, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetCar not implemented")
-}
-func (UnimplementedRoadTripPlayerServer) NewCar(context.Context, *NewCarRequest) (*Car, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method NewCar not implemented")
-}
-func (UnimplementedRoadTripPlayerServer) NameCar(context.Context, *NameCarRequest) (*Car, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method NameCar not implemented")
+func (UnimplementedRoadTripPlayerServer) UpdateCar(context.Context, *UpdateCarRequest) (*Car, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateCar not implemented")
 }
 func (UnimplementedRoadTripPlayerServer) mustEmbedUnimplementedRoadTripPlayerServer() {}
 
@@ -122,8 +108,26 @@ func RegisterRoadTripPlayerServer(s grpc.ServiceRegistrar, srv RoadTripPlayerSer
 	s.RegisterService(&RoadTripPlayer_ServiceDesc, srv)
 }
 
+func _RoadTripPlayer_CreateCharacter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateCharacterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoadTripPlayerServer).CreateCharacter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/roadtrip.RoadTripPlayer/CreateCharacter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoadTripPlayerServer).CreateCharacter(ctx, req.(*CreateCharacterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _RoadTripPlayer_GetCharacter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Empty)
+	in := new(GetCharacterRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -135,79 +139,43 @@ func _RoadTripPlayer_GetCharacter_Handler(srv interface{}, ctx context.Context, 
 		FullMethod: "/roadtrip.RoadTripPlayer/GetCharacter",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RoadTripPlayerServer).GetCharacter(ctx, req.(*Empty))
+		return srv.(RoadTripPlayerServer).GetCharacter(ctx, req.(*GetCharacterRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RoadTripPlayer_NewCharacter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NewCharacterRequest)
+func _RoadTripPlayer_UpdateCharacter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateCharacterRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RoadTripPlayerServer).NewCharacter(ctx, in)
+		return srv.(RoadTripPlayerServer).UpdateCharacter(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/roadtrip.RoadTripPlayer/NewCharacter",
+		FullMethod: "/roadtrip.RoadTripPlayer/UpdateCharacter",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RoadTripPlayerServer).NewCharacter(ctx, req.(*NewCharacterRequest))
+		return srv.(RoadTripPlayerServer).UpdateCharacter(ctx, req.(*UpdateCharacterRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RoadTripPlayer_GetCar_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Empty)
+func _RoadTripPlayer_UpdateCar_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateCarRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RoadTripPlayerServer).GetCar(ctx, in)
+		return srv.(RoadTripPlayerServer).UpdateCar(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/roadtrip.RoadTripPlayer/GetCar",
+		FullMethod: "/roadtrip.RoadTripPlayer/UpdateCar",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RoadTripPlayerServer).GetCar(ctx, req.(*Empty))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _RoadTripPlayer_NewCar_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NewCarRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(RoadTripPlayerServer).NewCar(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/roadtrip.RoadTripPlayer/NewCar",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RoadTripPlayerServer).NewCar(ctx, req.(*NewCarRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _RoadTripPlayer_NameCar_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NameCarRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(RoadTripPlayerServer).NameCar(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/roadtrip.RoadTripPlayer/NameCar",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RoadTripPlayerServer).NameCar(ctx, req.(*NameCarRequest))
+		return srv.(RoadTripPlayerServer).UpdateCar(ctx, req.(*UpdateCarRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -220,24 +188,20 @@ var RoadTripPlayer_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*RoadTripPlayerServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "CreateCharacter",
+			Handler:    _RoadTripPlayer_CreateCharacter_Handler,
+		},
+		{
 			MethodName: "GetCharacter",
 			Handler:    _RoadTripPlayer_GetCharacter_Handler,
 		},
 		{
-			MethodName: "NewCharacter",
-			Handler:    _RoadTripPlayer_NewCharacter_Handler,
+			MethodName: "UpdateCharacter",
+			Handler:    _RoadTripPlayer_UpdateCharacter_Handler,
 		},
 		{
-			MethodName: "GetCar",
-			Handler:    _RoadTripPlayer_GetCar_Handler,
-		},
-		{
-			MethodName: "NewCar",
-			Handler:    _RoadTripPlayer_NewCar_Handler,
-		},
-		{
-			MethodName: "NameCar",
-			Handler:    _RoadTripPlayer_NameCar_Handler,
+			MethodName: "UpdateCar",
+			Handler:    _RoadTripPlayer_UpdateCar_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

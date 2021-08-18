@@ -3,7 +3,6 @@ package main
 import (
   "bufio"
   "context"
-  "errors"
   "fmt"
   "github.com/brickshot/roadtrip/internal/client/config"
   pb "github.com/brickshot/roadtrip/internal/grpc"
@@ -17,38 +16,80 @@ import (
 )
 
 var cc *grpc.ClientConn
-var UUID string
+var id string
 var reader *bufio.Reader
 var client pb.RoadTripPlayerClient
 var ctx context.Context
+var character *pb.Character
 
 func setup() {
+  /*
+     Config file has list of characterInfo which have id
+     if characterInfo list is empty, add one
+     setup grpc with first characterInfo id
+     take first entry in characterInfo list and get character from server
+     now we have a id for the grpc header and a pb.character
+  */
+  // read config file. LoadConfig will create config if it doesn't exist.
+  // the new config file will have no characterInfos
   reader = bufio.NewReader(os.Stdin)
   conf, err := config.LoadConfig()
   if err != nil {
-    log.Fatalln("Config file error: " + err.Error())
+    log.Fatalln("Config file error: ", err)
+  }
+  setupGrpc(conf)
+
+  // if character list is empty, add one
+  if conf.Characters == nil || len(conf.Characters) == 0 {
+    createNewCharacter()
+    conf, err = config.LoadConfig()
+    if err != nil {
+      log.Fatalln("Config file error: ", err)
+    }
   }
 
-  UUID = conf.Characters[0].UUID
+  // currently only use first character
+  id = conf.Characters[0].Id
 
+  // add id to grpc headers. for now we only allow one character
+  md := metadata.New(map[string]string{"character_uuid": id})
+  ctx = metadata.NewOutgoingContext(context.Background(), md)
+
+  // get character from server
+  character, err = client.GetCharacter(ctx, &pb.GetCharacterRequest{Id: id})
+  if err != nil {
+    st := status.Convert(err)
+    if st.Code() == codes.NotFound {
+      log.Println("Sorry your character was not found on the server.")
+      fmt.Printf("Would you like to delete this character? (yes to delete): ")
+      r, _ := reader.ReadString('\n')
+      if r != "yes\n" {
+        fmt.Println("OK, exiting.")
+        os.Exit(0)
+      }
+      _, err = config.DeleteCharacterInfo(id)
+      if err != nil {
+        log.Fatalln("Config file error ", err)
+      }
+      log.Println("Deleted. Try starting over.")
+      os.Exit(0)
+    } else {
+      log.Fatalln("Error loading character")
+    }
+  }
+}
+
+func setupGrpc(conf config.ClientConfig) {
   opts := grpc.WithInsecure()
   serverAddress := conf.Server + ":" + conf.Port
-  cc, err = grpc.Dial(serverAddress, opts)
+  cc, err := grpc.Dial(serverAddress, opts)
   if err != nil {
     log.Fatalln(err)
   }
 
   client = pb.NewRoadTripPlayerClient(cc)
-
-  md := metadata.New(map[string]string{"character_uuid": UUID})
+  md := metadata.New(map[string]string{"character_uuid": id})
   ctx = metadata.NewOutgoingContext(context.Background(), md)
-}
-
-func shutdown() {
-  err := cc.Close()
-  if err != nil {
-    log.Fatalln(err)
-  }
 }
 
 func createNewCharacter() *pb.Character {
@@ -63,116 +104,30 @@ func createNewCharacter() *pb.Character {
     }
   }
 
-  char, err := client.NewCharacter(ctx, &pb.NewCharacterRequest{
-    Uuid: UUID,
-    Name: name,
+  // create in server
+  char, err := client.CreateCharacter(ctx, &pb.CreateCharacterRequest{
+    CaptchaId:     "",
+    CharacterName: name,
   })
   st := status.Convert(err)
   if st != nil {
     log.Fatalf("Failed to create character: %v\n", st.Err())
   }
 
+  // store in config
+  _, _, err = config.NewCharacterInfo(char.Id)
+  if err != nil {
+    log.Fatalln("Cannot create new character: ", err)
+  }
+
   return char
 }
 
-// getCharacter gets the character from the server or creates a new one and stores it
-func getCharacter() (char *pb.Character) {
-  if UUID == "" {
-    char = createNewCharacter()
-  } else {
-    var err error
-    for char == nil {
-      char, err = client.GetCharacter(ctx, &pb.Empty{})
-      if err != nil {
-        st := status.Convert(err)
-        if st.Code() == codes.NotFound {
-          log.Println("Sorry the character referenced by your UUID is not found on the server.")
-          fmt.Printf("Would you like to start over? (Enter yes to start over with a new character): ")
-          r, _ := reader.ReadString('\n')
-          if r != "yes\n" {
-            fmt.Println("OK, exiting.")
-            os.Exit(0)
-          }
-          char = createNewCharacter()
-        } else {
-          log.Fatalln("Error loading character")
-        }
-      }
-      fmt.Printf("Welcome back, %v\n", char.Name)
-    }
-  }
-
-  return
-}
-
-// getCharacter gets the character from the server or creates a new one and stores it
-func getCar() (*pb.Car, error) {
-  var car *pb.Car
-  if UUID == "" {
-    return nil, errors.New("invalid UUID")
-  } else {
-    var err error
-    for car == nil {
-      car, err = client.GetCar(ctx, &pb.Empty{})
-      if err != nil {
-        st := status.Convert(err)
-        if st.Code() == codes.NotFound {
-          fmt.Printf("You don't have a car. Let's make one...\n")
-          var name string
-          for name == "" {
-            fmt.Printf("What do you want to name your car? ")
-            name, _ = reader.ReadString('\n')
-            name = strings.TrimRight(name, "\r\n")
-            if name == "" {
-              fmt.Println("That name is too short.")
-            }
-          }
-          car, err = client.NewCar(ctx, &pb.NewCarRequest{Name: name})
-          if err != nil {
-            return nil, err
-          }
-        } else {
-          return nil, err
-        }
-      }
-      fmt.Printf("Found your car \"%v\".\n", car.Name)
-    }
-  }
-
-  return car, nil
-}
-
+// main
 func main() {
   fmt.Println("Welcome to RoadTrip")
   setup()
-  defer shutdown()
 
-  char := getCharacter()
-  car, err := getCar()
-
-  if err != nil {
-    log.Fatalf("Could not load car.")
-  }
-
-  fmt.Printf("Character: \"%v\"\n", char.Name)
-  fmt.Printf("Car: \"%v\"\n", car.Name)
-
-  /*
-    var car *pb.Car
-    car, err = client.GetCar(ctx, &pb.Empty{})
-    st = status.Convert(err)
-    if st != nil {
-      if st.Code() == codes.NotFound {
-        fmt.Println("Car does not exist, creating a car")
-        car, err = client.NewCar(ctx, &pb.NewCarRequest{Name: "My New Car"})
-        st = status.Convert(err)
-        if st != nil {
-          fmt.Printf("Could not create car\n")
-        } else {
-          fmt.Printf("Car created: #{car}\n")
-        }
-      }
-    }
-    fmt.Printf("Car response: %v\n", car)
-  */
+  fmt.Printf("Character: \"%v\"\n", character)
+  fmt.Printf("Car: \"%v\"\n", character.Car)
 }

@@ -4,9 +4,9 @@ import (
   "context"
   "errors"
   "fmt"
-  pb "github.com/brickshot/roadtrip/internal/grpc"
-  . "github.com/brickshot/roadtrip/internal/server"
-  "github.com/brickshot/roadtrip/internal/server/mongoData"
+  . "github.com/brickshot/roadtrip/internal/playerServer"
+  grpc2 "github.com/brickshot/roadtrip/internal/playerServer/grpc"
+  "github.com/brickshot/roadtrip/internal/playerServer/mongoData"
   "google.golang.org/grpc"
   "google.golang.org/grpc/codes"
   "google.golang.org/grpc/metadata"
@@ -24,7 +24,7 @@ const (
 )
 
 type playerServer struct {
-  pb.UnimplementedRoadTripPlayerServer
+  grpc2.UnimplementedRoadTripPlayerServer
 }
 
 // getUUID returns the UUID from the metadata
@@ -41,27 +41,27 @@ func getUUID(ctx context.Context) (string, error) {
 
 // CreateCharacter creates a new character record in the datastore and returns it.
 // Car is a singleton associated with character. The new character will get a new car assigned to it.
-func (*playerServer) CreateCharacter(ctx context.Context, request *pb.CreateCharacterRequest) (*pb.Character, error) {
+func (*playerServer) CreateCharacter(ctx context.Context, request *grpc2.CreateCharacterRequest) (*grpc2.Character, error) {
   if request.CharacterName == "" {
-    return &pb.Character{}, status.Errorf(codes.Internal, "Name required")
+    return &grpc2.Character{}, status.Errorf(codes.Internal, "Name required")
   }
 
   nc, err := dp.CreateCharacter(request.CharacterName)
   if err != nil {
-    return &pb.Character{}, status.Errorf(codes.Internal, "Could not create character: "+err.Error())
+    return &grpc2.Character{}, status.Errorf(codes.Internal, "Could not create character: "+err.Error())
   }
 
   // create car for new character
   car, err := dp.CreateCar(Car{}, nc)
   if err != nil {
     dp.DeleteCharacter(nc.Id)
-    return &pb.Character{}, status.Errorf(codes.Internal, "Could not create car for new character: "+err.Error())
+    return &grpc2.Character{}, status.Errorf(codes.Internal, "Could not create car for new character: "+err.Error())
   }
 
-  r := &pb.Character{
+  r := &grpc2.Character{
     Id: nc.Id,
     CharacterName: nc.Name,
-    Car: &pb.Car{
+    Car: &grpc2.Car{
       Id:  car.Id,
       Plate: car.Plate,
       CarName:  car.Name,
@@ -72,7 +72,7 @@ func (*playerServer) CreateCharacter(ctx context.Context, request *pb.CreateChar
 }
 
 // GetCharacter returns the character with the given id. Errors if id not found.
-func (*playerServer) GetCharacter(ctx context.Context, request *pb.GetCharacterRequest) (*pb.Character, error) {
+func (*playerServer) GetCharacter(ctx context.Context, request *grpc2.GetCharacterRequest) (*grpc2.Character, error) {
   contextUUID, err := getUUID(ctx)
   if err != nil {
     return nil, err
@@ -91,13 +91,18 @@ func (*playerServer) GetCharacter(ctx context.Context, request *pb.GetCharacterR
     return nil, status.Errorf(codes.NotFound, "cannot find Car for character")
   }
 
-  result := &pb.Character{
+  result := &grpc2.Character{
     Id: ch.Id,
     CharacterName: ch.Name,
-    Car: &pb.Car{
+    Car: &grpc2.Car{
       Id:  ch.Car.Id,
       Plate: ch.Car.Plate,
       CarName:  ch.Car.Name,
+      Location: &grpc2.Location{
+        TownId:   ch.Car.Location.TownId,
+        RoadId:   ch.Car.Location.RoadId,
+        Position: ch.Car.Location.Position,
+      },
     },
   }
 
@@ -123,12 +128,9 @@ func main() {
   // MongoData
   dp = mongoData.MongoProvider{}.Init(mongoData.Config{URI: "mongodb://root:example@localhost:27017"})
   defer dp.Shutdown()
-  // MemoryData
-  // dp = memoryData.MemoryProvider{}.Init(memoryData.Config{})
-  // defer dp.Shutdown()
 
   s := grpc.NewServer()
-  pb.RegisterRoadTripPlayerServer(s, &playerServer{})
+  grpc2.RegisterRoadTripPlayerServer(s, &playerServer{})
 
   s.Serve(lis)
 }

@@ -5,7 +5,7 @@ import (
   "context"
   "fmt"
   "github.com/brickshot/roadtrip/internal/client/config"
-  pb "github.com/brickshot/roadtrip/internal/grpc"
+  psgrpc "github.com/brickshot/roadtrip/internal/playerServer/grpc"
   "google.golang.org/grpc"
   "google.golang.org/grpc/codes"
   "google.golang.org/grpc/metadata"
@@ -15,12 +15,11 @@ import (
   "strings"
 )
 
-var cc *grpc.ClientConn
 var id string
 var reader *bufio.Reader
-var client pb.RoadTripPlayerClient
+var client psgrpc.RoadTripPlayerClient
 var ctx context.Context
-var character *pb.Character
+var character *psgrpc.Character
 
 func setup() {
   /*
@@ -56,7 +55,7 @@ func setup() {
   ctx = metadata.NewOutgoingContext(context.Background(), md)
 
   // get character from server
-  character, err = client.GetCharacter(ctx, &pb.GetCharacterRequest{Id: id})
+  character, err = client.GetCharacter(ctx, &psgrpc.GetCharacterRequest{Id: id})
   if err != nil {
     st := status.Convert(err)
     if st.Code() == codes.NotFound {
@@ -73,8 +72,10 @@ func setup() {
       }
       log.Println("Deleted. Try starting over.")
       os.Exit(0)
+    } else if st.Code() == codes.Unavailable {
+      log.Fatalf("Cannot contact the server at %v:%v\n", conf.Server, conf.Port)
     } else {
-      log.Fatalln("Error loading character")
+      log.Fatalf("An error occured when starting up: %v\n", err)
     }
   }
 }
@@ -87,12 +88,12 @@ func setupGrpc(conf config.ClientConfig) {
     log.Fatalln(err)
   }
 
-  client = pb.NewRoadTripPlayerClient(cc)
+  client = psgrpc.NewRoadTripPlayerClient(cc)
   md := metadata.New(map[string]string{"character_uuid": id})
   ctx = metadata.NewOutgoingContext(context.Background(), md)
 }
 
-func createNewCharacter() *pb.Character {
+func createNewCharacter() *psgrpc.Character {
   fmt.Println("Creating a new character...")
   var name string
   for name == "" {
@@ -105,7 +106,7 @@ func createNewCharacter() *pb.Character {
   }
 
   // create in server
-  char, err := client.CreateCharacter(ctx, &pb.CreateCharacterRequest{
+  char, err := client.CreateCharacter(ctx, &psgrpc.CreateCharacterRequest{
     CaptchaId:     "",
     CharacterName: name,
   })
@@ -123,11 +124,34 @@ func createNewCharacter() *pb.Character {
   return char
 }
 
+func welcome() {
+  title :=
+      `
+Welcome to...
+
+    __ __              ______     
+   '  )  )           /   /        
+     /--' __ __.  __/ --/__  o _  
+    /  \_(_)(_/|_(_/_(_// (_<_/_)_
+                             /    
+                          __/     
+`
+  fmt.Println(title)
+
+}
+
+func mainMenu() {
+  fmt.Printf("Character: %v\n", character.CharacterName)
+  fmt.Printf("Car Plate: %v\n", character.Car.Plate)
+  fmt.Println("Location:")
+  fmt.Printf("  Town : %v\n", character.Car.Location.TownId)
+  fmt.Printf("  Road : %v\n", character.Car.Location.RoadId)
+  fmt.Printf("  Position : %v\n", character.Car.Location.Position)
+}
+
 // main
 func main() {
-  fmt.Println("Welcome to RoadTrip")
+  welcome()
   setup()
-
-  fmt.Printf("Character: \"%v\"\n", character)
-  fmt.Printf("Car: \"%v\"\n", character.Car)
+  mainMenu()
 }

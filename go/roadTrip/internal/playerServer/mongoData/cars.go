@@ -3,12 +3,11 @@ package mongoData
 import (
   context "context"
   "errors"
-  . "github.com/brickshot/roadtrip/internal/server"
+  . "github.com/brickshot/roadtrip/internal/playerServer"
   "github.com/google/uuid"
   gonanoid "github.com/matoous/go-nanoid"
   "go.mongodb.org/mongo-driver/bson"
   "go.mongodb.org/mongo-driver/mongo"
-  "log"
   "time"
 )
 
@@ -24,11 +23,12 @@ func ShutdownCars() {
 }
 
 // CreateCar stores a car in the datastore. The id and plate will be assigned.
+// Currently all cars start in Seattle.
 func (d MongoProvider) CreateCar(c Car, owner Character) (Car, error) {
   // find an unused plate number
   var plate string
   for i := 0; i < 10; i++ {
-    p1, _ := gonanoid.Generate("abcdefghijklmnopqrstuvwxyz", 3)
+    p1, _ := gonanoid.Generate("ABCDEFGHIJKLMNOPQRSTUVWXYZ", 3)
     p2, _ := gonanoid.Generate("0123456789", 3)
     plate = p1 + "-" + p2
     _, err := d.GetCarByPlate(plate)
@@ -48,6 +48,11 @@ func (d MongoProvider) CreateCar(c Car, owner Character) (Car, error) {
     {"plate", plate},
     {"name", c.Name},
     {"owner_id", owner.Id},
+    {"location", Location{
+      RoadId:   "",
+      Position: 0,
+      TownId:   "states/Washington/towns/Seattle",
+    }},
   })
   if err != nil {
     return Car{}, err
@@ -70,17 +75,7 @@ func (d MongoProvider) GetCar(id string) (Car, error) {
 
 // GetCarByPlate returns the car referenced by Plate
 func (d MongoProvider) GetCarByPlate(plate string) (Car, error) {
-  filter := bson.D{{"plate", plate}}
-  result := Car{}
-  ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-  err := carsColl.FindOne(ctx, filter).Decode(&result)
-  if err == mongo.ErrNoDocuments {
-    return Car{}, errors.New("Not found")
-  } else if err != nil {
-    log.Fatal(err)
-  }
-
-  return result, nil
+  return Car{}, nil
 }
 
 // GetCharacters returns the characters in a car.

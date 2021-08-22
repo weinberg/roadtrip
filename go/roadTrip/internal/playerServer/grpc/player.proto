@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package roadtrip;
 
-option go_package = "insofar.com/roadTrip/grpc";
+option go_package = "insofar.com/roadTrip/player_grpc";
 
 // Interface exported by the server.
 
@@ -45,4 +45,11 @@ message Car {
   string id = 1; // output only
   string plate = 2;
   string car_name = 3;
+  Location location = 4; // output only
+}
+
+message Location {
+  string town_id = 1;
+  string road_id = 2;
+  float position = 3;
 }

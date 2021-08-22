@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package roadtrip;
+
+option go_package = "insofar.com/roadTrip/map_grpc";
+
+// Interface exported by the map server.
+
+// RoadTrip map service provides access to map information.
+// The map is a graph of nodes (towns) and vertices (roads).
+
+service RoadTripMap  {
+  rpc GetTown(GetTownRequest) returns (Town) {}
+  rpc ListStates(ListStatesRequest) returns (ListStatesResponse) {}
+  rpc ListTowns(ListTownsRequest) returns (ListTownsResponse) {}
+  rpc ListRoads(ListRoadsRequest) returns (ListRoadsResponse) {}
+}
+
+message Empty {
+}
+
+message Town {
+  string id = 1; // format "states/Colorado/towns/Denver"
+  string description = 3;
+  string state = 4; // format "states/Colorado"
+  string display_name = 5; // format "Denver"
+}
+
+message Road {
+  string id = 1; // format "states/Colorado/roads/I-25"
+  string display_name = 2;
+  int32 length_miles = 3;
+  string town_a = 4;
+  string town_b = 5;
+}
+
+message State {
+  string id = 1; // format "states/Colorado"
+  string display_name = 2;
+}
+
+message GetTownRequest {
+  string id = 1;
+}
+
+message ListTownsRequest {
+  string state = 1;
+}
+
+message ListTownsResponse {
+  repeated Town towns = 1;
+}
+
+message ListRoadsRequest {
+  string parent = 1; // ie "/states/Colorado/towns/Denver"
+}
+
+message ListRoadsResponse {
+  repeated Road roads = 1;
+}
+
+message ListStatesRequest {
+}
+
+message ListStatesResponse {
+  repeated State states = 1;
+}

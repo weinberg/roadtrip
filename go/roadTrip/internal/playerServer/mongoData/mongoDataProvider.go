@@ -2,19 +2,17 @@ package mongoData
 
 import (
   "context"
-  "fmt"
-  "github.com/brickshot/roadtrip/internal/server"
-  "go.mongodb.org/mongo-driver/bson"
+  "github.com/brickshot/roadtrip/internal/playerServer"
   "go.mongodb.org/mongo-driver/mongo"
   "go.mongodb.org/mongo-driver/mongo/options"
   "log"
   "time"
 )
 
-const dbName = "roadtripDB"
+const dbName = "rtPlayerDB"
 
 type MongoProvider struct {
-  server.DataProvider
+  playerServer.DataProvider
 }
 
 var client *mongo.Client
@@ -22,7 +20,7 @@ var database *mongo.Database
 
 type Config struct {
   URI string
-  server.InitConfig
+  playerServer.InitConfig
 }
 
 func (p MongoProvider) Init (c Config) MongoProvider {
@@ -38,16 +36,6 @@ func (p MongoProvider) Init (c Config) MongoProvider {
   }
 
   database = client.Database(dbName)
-
-  /*
-     List databases
-  */
-  databases, err := client.ListDatabaseNames(ctx, bson.M{})
-  if err != nil {
-    log.Fatal(err)
-  }
-  fmt.Println(databases)
-
 
   // Init collections
   InitCharacters()

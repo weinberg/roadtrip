@@ -5,11 +5,11 @@ import (
 )
 
 type MemoryProvider struct {
-  server.DataProvider
+  playerServer.DataProvider
 }
 
 type Config struct {
-  server.InitConfig
+  playerServer.InitConfig
 }
 
 func (d MemoryProvider) Init(c Config) MemoryProvider {

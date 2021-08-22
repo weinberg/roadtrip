@@ -3,7 +3,7 @@ package mongoData
 import (
   "context"
   "errors"
-  . "github.com/brickshot/roadtrip/internal/server"
+  . "github.com/brickshot/roadtrip/internal/playerServer"
   "github.com/google/uuid"
   "go.mongodb.org/mongo-driver/bson"
   "go.mongodb.org/mongo-driver/mongo"

@@ -4,6 +4,7 @@ import (
   "context"
   "errors"
   "fmt"
+  mgrpc "github.com/brickshot/roadtrip/internal/mapServer/grpc"
   . "github.com/brickshot/roadtrip/internal/playerServer"
   grpc2 "github.com/brickshot/roadtrip/internal/playerServer/grpc"
   "github.com/brickshot/roadtrip/internal/playerServer/mongoData"
@@ -16,6 +17,7 @@ import (
 )
 
 var dp mongoData.MongoProvider
+var mapClient mgrpc.RoadTripMapClient
 
 // var dp memoryData.MemoryProvider
 
@@ -59,12 +61,12 @@ func (*playerServer) CreateCharacter(ctx context.Context, request *grpc2.CreateC
   }
 
   r := &grpc2.Character{
-    Id: nc.Id,
+    Id:            nc.Id,
     CharacterName: nc.Name,
     Car: &grpc2.Car{
-      Id:  car.Id,
-      Plate: car.Plate,
-      CarName:  car.Name,
+      Id:      car.Id,
+      Plate:   car.Plate,
+      CarName: car.Name,
     },
   }
 
@@ -78,7 +80,7 @@ func (*playerServer) GetCharacter(ctx context.Context, request *grpc2.GetCharact
     return nil, err
   }
 
-  if contextUUID != request.Id  {
+  if contextUUID != request.Id {
     return nil, status.Errorf(codes.PermissionDenied, "Permission denied for that character ID")
   }
 
@@ -92,12 +94,12 @@ func (*playerServer) GetCharacter(ctx context.Context, request *grpc2.GetCharact
   }
 
   result := &grpc2.Character{
-    Id: ch.Id,
+    Id:            ch.Id,
     CharacterName: ch.Name,
     Car: &grpc2.Car{
-      Id:  ch.Car.Id,
-      Plate: ch.Car.Plate,
-      CarName:  ch.Car.Name,
+      Id:      ch.Car.Id,
+      Plate:   ch.Car.Plate,
+      CarName: ch.Car.Name,
       Location: &grpc2.Location{
         TownId:   ch.Car.Location.TownId,
         RoadId:   ch.Car.Location.RoadId,
@@ -106,6 +108,33 @@ func (*playerServer) GetCharacter(ctx context.Context, request *grpc2.GetCharact
     },
   }
 
+  return result, nil
+}
+
+func setupMapClient() {
+  opts := grpc.WithInsecure()
+  serverAddress := "0.0.0.0:9067" // todo make env var
+  cc, err := grpc.Dial(serverAddress, opts)
+  if err != nil {
+    log.Fatalln(err)
+  }
+
+  mapClient = mgrpc.NewRoadTripMapClient(cc)
+}
+
+func (*playerServer) GetTown(ctx context.Context, request *grpc2.GetTownRequest) (*grpc2.Town, error) {
+  // ctx, _ = context.WithTimeout(ctx, 10*time.Second)
+  ctx = context.Background()
+  town, err := mapClient.GetTown(ctx, &mgrpc.GetTownRequest{Id: request.Id})
+  if err != nil {
+    return nil, status.Errorf(codes.NotFound, "cannot find town")
+  }
+  result := &grpc2.Town{
+    Id:          town.Id,
+    StateId:     town.State,
+    TownName:    town.DisplayName,
+    Description: town.Description,
+  }
   return result, nil
 }
 
@@ -125,9 +154,13 @@ func main() {
   fmt.Printf("Server is listening on %v...", address)
 
   fmt.Printf("Connecting to data provider...")
+
   // MongoData
   dp = mongoData.MongoProvider{}.Init(mongoData.Config{URI: "mongodb://root:example@localhost:27017"})
   defer dp.Shutdown()
+
+  // MapClient
+  setupMapClient()
 
   s := grpc.NewServer()
   grpc2.RegisterRoadTripPlayerServer(s, &playerServer{})

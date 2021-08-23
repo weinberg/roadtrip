@@ -13,6 +13,8 @@ service RoadTripPlayer  {
   rpc GetCharacter(GetCharacterRequest) returns (Character) {}
   rpc UpdateCharacter(UpdateCharacterRequest) returns (Character) {}
   rpc UpdateCar(UpdateCarRequest) returns (Car) {}
+
+  rpc GetTown(GetTownRequest) returns (Town) {}
 }
 
 message Empty {
@@ -52,4 +54,15 @@ message Location {
   string town_id = 1;
   string road_id = 2;
   float position = 3;
+}
+
+message Town {
+  string id = 1;
+  string state_id = 2;
+  string town_name = 3;
+  string description = 4;
+}
+
+message GetTownRequest {
+  string id = 1;
 }

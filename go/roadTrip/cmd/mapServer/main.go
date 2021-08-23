@@ -10,6 +10,7 @@ import (
   "net"
 )
 
+const mongoURI = "mongodb://root:example@localhost:27017"
 var dp mongoData.MongoProvider
 
 const (
@@ -20,9 +21,9 @@ type mapServer struct {
   rpc.UnimplementedRoadTripMapServer
 }
 
-// GetTown gets a town by name
+// GetTown gets a town by id
 func (*mapServer) GetTown(ctx context.Context, request *rpc.GetTownRequest) (*rpc.Town, error) {
-  t, err := dp.GetTownByName(request.Id)
+  t, err := dp.GetTown(request.Id)
   if err != nil {
     return nil, err
   }
@@ -52,7 +53,7 @@ func main() {
   fmt.Printf("Connecting to data provider...")
 
   // MongoData
-  dp = mongoData.MongoProvider{}.Init(mongoData.Config{URI: "mongodb://root:example@localhost:27017"})
+  dp = mongoData.MongoProvider{}.Init(mongoData.Config{URI: mongoURI})
   defer dp.Shutdown()
 
   s := grpc.NewServer()

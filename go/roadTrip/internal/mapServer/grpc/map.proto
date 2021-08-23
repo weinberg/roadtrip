@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package roadtrip;
+package roadtrip_map;
 
-option go_package = "insofar.com/roadTrip/map_grpc";
+option go_package = "insofar.com/roadtrip_map/map_grpc";
 
 // Interface exported by the map server.
 
@@ -20,14 +20,14 @@ message Empty {
 }
 
 message Town {
-  string id = 1; // format "states/Colorado/towns/Denver"
+  string id = 1; // format "states/colorado/towns/denver"
+  string display_name = 2; // format "Denver"
   string description = 3;
   string state = 4; // format "states/Colorado"
-  string display_name = 5; // format "Denver"
 }
 
 message Road {
-  string id = 1; // format "states/Colorado/roads/I-25"
+  string id = 1; // format "states/colorado/roads/i-25"
   string display_name = 2;
   int32 length_miles = 3;
   string town_a = 4;
@@ -35,7 +35,7 @@ message Road {
 }
 
 message State {
-  string id = 1; // format "states/Colorado"
+  string id = 1; // format "states/colorado"
   string display_name = 2;
 }
 
@@ -52,7 +52,7 @@ message ListTownsResponse {
 }
 
 message ListRoadsRequest {
-  string parent = 1; // ie "/states/Colorado/towns/Denver"
+  string parent = 1; // ie "/states/colorado/towns/denver"
 }
 
 message ListRoadsResponse {

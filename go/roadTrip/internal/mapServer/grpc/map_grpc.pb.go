@@ -34,7 +34,7 @@ func NewRoadTripMapClient(cc grpc.ClientConnInterface) RoadTripMapClient {
 
 func (c *roadTripMapClient) GetTown(ctx context.Context, in *GetTownRequest, opts ...grpc.CallOption) (*Town, error) {
 	out := new(Town)
-	err := c.cc.Invoke(ctx, "/roadtrip.RoadTripMap/GetTown", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/roadtrip_map.RoadTripMap/GetTown", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (c *roadTripMapClient) GetTown(ctx context.Context, in *GetTownRequest, opt
 
 func (c *roadTripMapClient) ListStates(ctx context.Context, in *ListStatesRequest, opts ...grpc.CallOption) (*ListStatesResponse, error) {
 	out := new(ListStatesResponse)
-	err := c.cc.Invoke(ctx, "/roadtrip.RoadTripMap/ListStates", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/roadtrip_map.RoadTripMap/ListStates", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (c *roadTripMapClient) ListStates(ctx context.Context, in *ListStatesReques
 
 func (c *roadTripMapClient) ListTowns(ctx context.Context, in *ListTownsRequest, opts ...grpc.CallOption) (*ListTownsResponse, error) {
 	out := new(ListTownsResponse)
-	err := c.cc.Invoke(ctx, "/roadtrip.RoadTripMap/ListTowns", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/roadtrip_map.RoadTripMap/ListTowns", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (c *roadTripMapClient) ListTowns(ctx context.Context, in *ListTownsRequest,
 
 func (c *roadTripMapClient) ListRoads(ctx context.Context, in *ListRoadsRequest, opts ...grpc.CallOption) (*ListRoadsResponse, error) {
 	out := new(ListRoadsResponse)
-	err := c.cc.Invoke(ctx, "/roadtrip.RoadTripMap/ListRoads", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/roadtrip_map.RoadTripMap/ListRoads", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func _RoadTripMap_GetTown_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/roadtrip.RoadTripMap/GetTown",
+		FullMethod: "/roadtrip_map.RoadTripMap/GetTown",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(RoadTripMapServer).GetTown(ctx, req.(*GetTownRequest))
@@ -136,7 +136,7 @@ func _RoadTripMap_ListStates_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/roadtrip.RoadTripMap/ListStates",
+		FullMethod: "/roadtrip_map.RoadTripMap/ListStates",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(RoadTripMapServer).ListStates(ctx, req.(*ListStatesRequest))
@@ -154,7 +154,7 @@ func _RoadTripMap_ListTowns_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/roadtrip.RoadTripMap/ListTowns",
+		FullMethod: "/roadtrip_map.RoadTripMap/ListTowns",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(RoadTripMapServer).ListTowns(ctx, req.(*ListTownsRequest))
@@ -172,7 +172,7 @@ func _RoadTripMap_ListRoads_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/roadtrip.RoadTripMap/ListRoads",
+		FullMethod: "/roadtrip_map.RoadTripMap/ListRoads",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(RoadTripMapServer).ListRoads(ctx, req.(*ListRoadsRequest))
@@ -184,7 +184,7 @@ func _RoadTripMap_ListRoads_Handler(srv interface{}, ctx context.Context, dec fu
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var RoadTripMap_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "roadtrip.RoadTripMap",
+	ServiceName: "roadtrip_map.RoadTripMap",
 	HandlerType: (*RoadTripMapServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

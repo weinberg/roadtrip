@@ -7,7 +7,6 @@ import (
   "go.mongodb.org/mongo-driver/bson"
   "go.mongodb.org/mongo-driver/mongo"
   "log"
-  "time"
 )
 
 var townsColl *mongo.Collection
@@ -22,10 +21,11 @@ func ShutdownTowns() {
 }
 
 // GetTownByName returns the town by name
-func (d MongoProvider) GetTownByName(name string) (Town, error) {
-  filter := bson.D{{"town_name", name}}
+func (d MongoProvider) GetTown(id string) (Town, error) {
+  filter := bson.D{{"id", id}}
   result := Town{}
-  ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+  //ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+  ctx := context.Background()
   err := townsColl.FindOne(ctx, filter).Decode(&result)
   if err == mongo.ErrNoDocuments {
     return Town{}, errors.New("Not found")

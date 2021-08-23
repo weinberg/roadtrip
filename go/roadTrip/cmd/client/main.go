@@ -140,18 +140,27 @@ Welcome to...
 
 }
 
-func mainMenu() {
+func printStatus() {
   fmt.Printf("Character: %v\n", character.CharacterName)
   fmt.Printf("Car Plate: %v\n", character.Car.Plate)
-  fmt.Println("Location:")
+  fmt.Printf("Location:\n")
   fmt.Printf("  Town : %v\n", character.Car.Location.TownId)
   fmt.Printf("  Road : %v\n", character.Car.Location.RoadId)
   fmt.Printf("  Position : %v\n", character.Car.Location.Position)
+
+  town, err := client.GetTown(context.Background(), &psgrpc.GetTownRequest{Id: character.Car.Location.TownId})
+  if err != nil {
+    log.Fatalln("Cannot find town details")
+  }
+  fmt.Printf("Town Details:\n")
+  fmt.Printf("  State: %v\n", town.StateId)
+  fmt.Printf("  Town : %v\n", town.TownName)
+  fmt.Printf("  Info : %v\n", town.Description)
 }
 
 // main
 func main() {
   welcome()
   setup()
-  mainMenu()
+  printStatus()
 }

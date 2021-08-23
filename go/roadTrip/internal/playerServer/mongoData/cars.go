@@ -51,7 +51,7 @@ func (d MongoProvider) CreateCar(c Car, owner Character) (Car, error) {
     {"location", Location{
       RoadId:   "",
       Position: 0,
-      TownId:   "states/Washington/towns/Seattle",
+      TownId:   "states/washington/towns/seattle",
     }},
   })
   if err != nil {

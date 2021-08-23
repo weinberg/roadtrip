@@ -56,8 +56,8 @@ func SeedStates() {
   var coll *mongo.Collection
   coll = database.Collection("states")
   _, err := coll.InsertMany(context.Background(), []interface{}{
-    bson.D{{"Id", "/states/Colorado"}, {"Name", "Colorado"}},
-    bson.D{{"Id", "/states/NewMexico"}, {"Name", "New Mexico"}},
+    bson.D{{"id", "states/colorado"}, {"name", "Colorado"}},
+    bson.D{{"id", "states/newmexico"}, {"name", "New Mexico"}},
   })
   if err != nil {
     log.Fatal(err)
@@ -69,22 +69,28 @@ func SeedTowns() {
   coll = database.Collection("towns")
   coll.InsertMany(context.Background(), []interface{}{
     bson.M{
-      "Id":          "/states/Colorado/towns/Denver",
-      "Name":        "Denver",
-      "Description": "The capitol of Colorado",
-      "State":       "/states/Colorado",
+      "id":          "states/washington/towns/seattle",
+      "name":        "Seattle",
+      "description": "A seaport city on the West Coast of the United States.",
+      "state":       "/states/washington",
     },
     bson.M{
-      "Id":          "/states/Colorado/towns/GrandJunction",
-      "Name":        "Grand Junction",
-      "Description": "A mid-sized Western Slope town.",
-      "State":       "/states/Colorado",
+      "id":          "states/colorado/towns/denver",
+      "name":        "Denver",
+      "description": "The capitol of Colorado",
+      "state":       "/states/colorado",
     },
     bson.M{
-      "Id":          "/states/Colorado/towns/Breckenridge",
-      "Name":        "Breckenridge",
-      "Description": "A cozy ski town.",
-      "State":       "/states/Colorado",
+      "id":          "states/colorado/towns/grandjunction",
+      "name":        "Grand Junction",
+      "description": "A mid-sized Western Slope town.",
+      "state":       "/states/colorado",
+    },
+    bson.M{
+      "id":          "states/colorado/towns/breckenridge",
+      "name":        "Breckenridge",
+      "description": "A ski town.",
+      "state":       "/states/colorado",
     },
   })
 }
@@ -94,10 +100,10 @@ func SeedRoads() {
   coll = database.Collection("roads")
   coll.InsertMany(context.Background(), []interface{}{
     bson.M{
-      "Id":    "/states/Colorado/roads/I-25",
-      "Name":  "I-70",
-      "TownA": "/states/Colorado/towns/Denver",
-      "TownB": "/states/Colorado/towns/Breckenridge",
+      "id":    "states/colorado/roads/i-25",
+      "name":  "I-70",
+      "town_a_id": "states/colorado/towns/denver",
+      "town_b_id": "states/colorado/towns/breckenridge",
     },
   })
 }

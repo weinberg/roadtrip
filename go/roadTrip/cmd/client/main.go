@@ -73,7 +73,7 @@ func setup() {
       log.Println("Deleted. Try starting over.")
       os.Exit(0)
     } else if st.Code() == codes.Unavailable {
-      log.Fatalf("Cannot contact the server at %v:%v\n", conf.Server, conf.Port)
+      log.Fatalf("Cannot contact the server at %v:%v (%v)\n", conf.Server, conf.Port, err)
     } else {
       log.Fatalf("An error occured when starting up: %v\n", err)
     }
@@ -101,8 +101,7 @@ func createNewCharacter() *psgrpc.Character {
     name, _ = reader.ReadString('\n')
     name = strings.TrimRight(name, "\r\n")
     if name == "" {
-      fmt.Println("That name is too short.")
-    }
+      fmt.Println("That name is too short.") }
   }
 
   // create in server
@@ -150,7 +149,7 @@ func printStatus() {
 
   town, err := client.GetTown(context.Background(), &psgrpc.GetTownRequest{Id: character.Car.Location.TownId})
   if err != nil {
-    log.Fatalln("Cannot find town details")
+    log.Fatalf("Cannot find town details: %v\n", err)
   }
   fmt.Printf("Town Details:\n")
   fmt.Printf("  State: %v\n", town.StateId)

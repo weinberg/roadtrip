@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: docker-mapserver
+  labels:
+    app: docker-mapserver
+spec:
+  ports:
+    - port: 9067
+      protocol: TCP
+  clusterIP: None
+  selector:
+    app: docker-mapserver
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: docker-mapserver
+  labels:
+    app: docker-mapserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: docker-mapserver
+  template:
+    metadata:
+      labels:
+        app: docker-mapserver
+    spec:
+      containers:
+      - name: docker-mapserver
+        image: docker-mapserver

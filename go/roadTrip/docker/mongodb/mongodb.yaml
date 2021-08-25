@@ -1,0 +1,115 @@
+# mongodb.yaml
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mongo-configuration
+data:
+  MONGO_INITDB_ROOT_USERNAME: "root"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mongo-credentials
+type: Opaque
+stringData:
+  # todo: move to vault or something real
+  password: example
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongo-pv
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 100Mi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /mnt1/mongo-data
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-pvc
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+  volumeName: mongo-pv
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongo-statefulset
+spec:
+  serviceName: "mongo"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      containers:
+        - name: mongo
+          image: mongo
+          envFrom:
+            - configMapRef:
+                name: mongo-configuration
+          env:
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-credentials
+                  key: password
+          ports:
+            - containerPort: 27017
+              name: mongodb
+          volumeMounts:
+            - name: mongo-volume-mount
+              mountPath: /data
+#          readinessProbe:
+#            exec:
+#              command:
+#                - bash
+#                - "-c"
+#                - "psql -U$POSTGRES_USER -d$POSTGRES_DB -c 'SELECT 1'"
+#            initialDelaySeconds: 15
+#            timeoutSeconds: 2
+#          livenessProbe:
+#            exec:
+#              command:
+#                - bash
+#                - "-c"
+#                - "psql -U$POSTGRES_USER -d$POSTGRES_DB -c 'SELECT 1'"
+#            initialDelaySeconds: 15
+#            timeoutSeconds: 2
+      volumes:
+        - name: mongo-data
+          emptyDir: {}
+        - name: mongo-volume-mount
+          persistentVolumeClaim:
+            claimName: mongo-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-service
+spec:
+  ports:
+    - port: 27017
+      name: mongo
+  type: NodePort
+  selector:
+    app: mongo

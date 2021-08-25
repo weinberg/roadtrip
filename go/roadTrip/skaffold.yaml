@@ -1,0 +1,29 @@
+apiVersion: skaffold/v2beta21
+kind: Config
+metadata:
+  name: roadtrip
+build:
+  local:
+    concurrency: 4
+  artifacts:
+  - image: docker-mapserver
+    context: .
+    docker:
+      dockerfile: docker/mapServer/Dockerfile
+  - image: docker-playerserver
+    context: .
+    docker:
+      dockerfile: docker/playerServer/Dockerfile
+deploy:
+  kubectl:
+    manifests:
+    - docker/mapserver/deployment.yaml
+    - docker/playerserver/deployment.yaml
+    - docker/mongodb/mongodb.yaml
+portForward:
+- resourceType: service
+  resourceName: docker-playerserver
+  port: 9066
+- resourceType: service
+  resourceName: mongo-service
+  port: 27017

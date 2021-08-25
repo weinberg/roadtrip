@@ -14,6 +14,7 @@ import (
   "google.golang.org/grpc/status"
   "log"
   "net"
+  "time"
 )
 
 var dp mongoData.MongoProvider
@@ -22,7 +23,10 @@ var mapClient mgrpc.RoadTripMapClient
 // var dp memoryData.MemoryProvider
 
 const (
-  port = ":9066"
+  port = "9066"
+  mongoURI = "mongodb://root:example@mongo-service:27017"
+  mapServerHost = "docker-mapserver"
+  mapServerPort = "9067"
 )
 
 type playerServer struct {
@@ -113,7 +117,7 @@ func (*playerServer) GetCharacter(ctx context.Context, request *grpc2.GetCharact
 
 func setupMapClient() {
   opts := grpc.WithInsecure()
-  serverAddress := "0.0.0.0:9067" // todo make env var
+  serverAddress := mapServerHost + ":" + mapServerPort
   cc, err := grpc.Dial(serverAddress, opts)
   if err != nil {
     log.Fatalln(err)
@@ -123,8 +127,7 @@ func setupMapClient() {
 }
 
 func (*playerServer) GetTown(ctx context.Context, request *grpc2.GetTownRequest) (*grpc2.Town, error) {
-  // ctx, _ = context.WithTimeout(ctx, 10*time.Second)
-  ctx = context.Background()
+  ctx, _ = context.WithTimeout(ctx, 10*time.Second)
   town, err := mapClient.GetTown(ctx, &mgrpc.GetTownRequest{Id: request.Id})
   if err != nil {
     return nil, status.Errorf(codes.NotFound, "cannot find town")
@@ -146,7 +149,7 @@ func (*playerServer) GetTown(ctx context.Context, request *grpc2.GetTownRequest)
 
 func main() {
   fmt.Println("Server started")
-  address := "0.0.0.0" + port
+  address := "0.0.0.0" + ":" + port
   lis, err := net.Listen("tcp", address)
   if err != nil {
     log.Fatalf("Error %v", err)
@@ -156,7 +159,7 @@ func main() {
   fmt.Printf("Connecting to data provider...")
 
   // MongoData
-  dp = mongoData.MongoProvider{}.Init(mongoData.Config{URI: "mongodb://root:example@localhost:27017"})
+  dp = mongoData.MongoProvider{}.Init(mongoData.Config{URI: mongoURI})
   defer dp.Shutdown()
 
   // MapClient

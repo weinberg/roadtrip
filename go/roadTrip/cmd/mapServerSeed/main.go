@@ -8,6 +8,7 @@ import (
   "go.mongodb.org/mongo-driver/mongo"
   "go.mongodb.org/mongo-driver/mongo/options"
   "log"
+  "time"
 )
 
 var database *mongo.Database
@@ -32,7 +33,8 @@ func main() {
   if err != nil {
     log.Fatal(err)
   }
-  err = client.Connect(context.Background())
+  ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+  err = client.Connect(ctx)
   if err != nil {
     log.Fatal(err)
   }
@@ -42,7 +44,11 @@ func main() {
 
   if !skipCleanFlag {
     fmt.Println("Dropping map database...")
-    database.Drop(context.Background())
+    ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+    database.Drop(ctx)
+    if ctx.Err() == context.DeadlineExceeded {
+      log.Fatalf("Deadline exceeded talking to db: %v\n", err)
+    }
   }
 
   fmt.Println("Seeding map data...")

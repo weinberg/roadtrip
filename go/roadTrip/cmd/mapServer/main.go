@@ -10,11 +10,11 @@ import (
   "net"
 )
 
-const mongoURI = "mongodb://root:example@localhost:27017"
+const mongoURI = "mongodb://root:example@mongo-service:27017"
 var dp mongoData.MongoProvider
 
 const (
-  port = ":9067"
+  port = "9067"
 )
 
 type mapServer struct {
@@ -23,6 +23,7 @@ type mapServer struct {
 
 // GetTown gets a town by id
 func (*mapServer) GetTown(ctx context.Context, request *rpc.GetTownRequest) (*rpc.Town, error) {
+  fmt.Printf("In GetTown: id = %v\n", request.Id)
   t, err := dp.GetTown(request.Id)
   if err != nil {
     return nil, err
@@ -43,7 +44,7 @@ func (*mapServer) GetTown(ctx context.Context, request *rpc.GetTownRequest) (*rp
 
 func main() {
   fmt.Println("Server started")
-  address := "0.0.0.0" + port
+  address := "0.0.0.0:" + port
   lis, err := net.Listen("tcp", address)
   if err != nil {
     log.Fatalf("Error %v", err)

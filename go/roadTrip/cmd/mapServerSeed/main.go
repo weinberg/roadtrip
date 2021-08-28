@@ -62,8 +62,12 @@ func SeedStates() {
   var coll *mongo.Collection
   coll = database.Collection("states")
   _, err := coll.InsertMany(context.Background(), []interface{}{
+    bson.D{{"id", "states/washington"}, {"name", "Washington"}},
+    bson.D{{"id", "states/oregon"}, {"name", "Oregon"}},
+    bson.D{{"id", "states/idaho"}, {"name", "Idaho"}},
+    bson.D{{"id", "states/utah"}, {"name", "Utah"}},
+    bson.D{{"id", "states/wyoming"}, {"name", "Wyoming"}},
     bson.D{{"id", "states/colorado"}, {"name", "Colorado"}},
-    bson.D{{"id", "states/newmexico"}, {"name", "New Mexico"}},
   })
   if err != nil {
     log.Fatal(err)
@@ -81,21 +85,51 @@ func SeedTowns() {
       "state":       "/states/washington",
     },
     bson.M{
+      "id":          "states/washington/towns/ellensburg",
+      "name":        "Ellensburg",
+      "description": "Ellensburg, originally named Ellensburgh for the wife of town founder John Alden Shoudy, was founded in 1871.",
+      "state":       "/states/washington",
+    },
+    bson.M{
+      "id":          "states/oregon/towns/hermiston",
+      "name":        "Hermison",
+      "description": "Hermiston is a city in Umatilla County, Oregon, United States. Its population of 19,354 makes it the largest city in Eastern Oregon. (Wikipedia)",
+      "state":       "/states/oregon",
+    },
+    bson.M{
+      "id":          "states/idaho/towns/boise",
+      "name":        "Boise",
+      "description": "Boise is the capital city of Idaho.",
+      "state":       "/states/oregon",
+    },
+    bson.M{
+      "id":          "states/utah/towns/ogden",
+      "name":        "Ogden",
+      "description": "Ogden, Utah",
+      "state":       "/states/utah",
+    },
+    bson.M{
+      "id":          "states/wyoming/towns/evanston",
+      "name":        "Evanston",
+      "description": "The population was 12,359 at the 2010 census. It is located near the border with Utah.",
+      "state":       "/states/wyoming",
+    },
+    bson.M{
+      "id":          "states/wyoming/towns/cheyenne",
+      "name":        "Cheyenne",
+      "description": "Cheyenne is the capital city of Wyoming. It’s home to the Cheyenne Frontier Days Old West Museum.",
+      "state":       "/states/wyoming",
+    },
+    bson.M{
+      "id":          "states/colorado/towns/fortcollins",
+      "name":        "Fort Collins",
+      "description": "Fort Fun",
+      "state":       "/states/colorado",
+    },
+    bson.M{
       "id":          "states/colorado/towns/denver",
       "name":        "Denver",
       "description": "The capitol of Colorado",
-      "state":       "/states/colorado",
-    },
-    bson.M{
-      "id":          "states/colorado/towns/grandjunction",
-      "name":        "Grand Junction",
-      "description": "A mid-sized Western Slope town.",
-      "state":       "/states/colorado",
-    },
-    bson.M{
-      "id":          "states/colorado/towns/breckenridge",
-      "name":        "Breckenridge",
-      "description": "A ski town.",
       "state":       "/states/colorado",
     },
   })
@@ -106,10 +140,52 @@ func SeedRoads() {
   coll = database.Collection("roads")
   coll.InsertMany(context.Background(), []interface{}{
     bson.M{
-      "id":    "states/colorado/roads/i-25",
-      "name":  "I-70",
-      "town_a_id": "states/colorado/towns/denver",
-      "town_b_id": "states/colorado/towns/breckenridge",
+      "id":    "roads/i-90",
+      "name":  "I-90",
+      "town_a_id": "states/washington/towns/seattle",
+      "town_b_id": "states/washington/towns/ellensburg",
+    },
+    bson.M{
+      "id":    "roads/i-82",
+      "name":  "I-82",
+      "town_a_id": "states/washington/towns/ellensburg",
+      "town_b_id": "states/oregon/towns/hermiston",
+    },
+    bson.M{
+      "id":    "roads/i-84-a",
+      "name":  "I-84",
+      "town_a_id": "states/oregon/towns/hermiston",
+      "town_b_id": "states/idaho/towns/boise",
+    },
+    bson.M{
+      "id":    "roads/i-84-b",
+      "name":  "I-84",
+      "town_a_id": "states/idaho/towns/boise",
+      "town_b_id": "states/utah/towns/ogden",
+    },
+    bson.M{
+      "id":    "roads/i-80-a",
+      "name":  "I-80",
+      "town_a_id": "states/utah/towns/ogden",
+      "town_b_id": "states/wyoming/towns/evanston",
+    },
+    bson.M{
+      "id":    "roads/i-80-b",
+      "name":  "I-80",
+      "town_a_id": "states/wyoming/towns/evanston",
+      "town_b_id": "states/wyoming/towns/cheyenne",
+    },
+    bson.M{
+      "id":    "roads/i-25-a",
+      "name":  "I-25",
+      "town_a_id": "states/wyoming/towns/cheyenne",
+      "town_b_id": "states/colorado/towns/fortcollins",
+    },
+    bson.M{
+      "id":    "roads/i-25-b",
+      "name":  "I-25",
+      "town_a_id": "states/colorado/towns/fortcollins",
+      "town_b_id": "states/colorado/towns/denver",
     },
   })
 }

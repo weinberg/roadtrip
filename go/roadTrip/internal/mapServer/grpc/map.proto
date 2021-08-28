@@ -27,7 +27,7 @@ message Town {
 }
 
 message Road {
-  string id = 1; // format "states/colorado/roads/i-25"
+  string id = 1; // format "roads/i-25"
   string display_name = 2;
   int32 length_miles = 3;
   string town_a = 4;

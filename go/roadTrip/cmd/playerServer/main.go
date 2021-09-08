@@ -23,14 +23,63 @@ var mapClient mgrpc.RoadTripMapClient
 // var dp memoryData.MemoryProvider
 
 const (
-  port = "9066"
-  mongoURI = "mongodb://root:example@mongo-service:27017"
+  port          = "9066"
+  mongoURI      = "mongodb://root:example@mongo-service:27017"
   mapServerHost = "docker-mapserver"
   mapServerPort = "9067"
 )
 
 type playerServer struct {
   grpc2.UnimplementedRoadTripPlayerServer
+}
+
+/******************************
+ *
+ * Main
+ *
+ ******************************/
+
+func main() {
+  fmt.Println("PlayerServer started")
+  address := "0.0.0.0" + ":" + port
+  lis, err := net.Listen("tcp", address)
+  if err != nil {
+    log.Fatalf("Error %v", err)
+  }
+  fmt.Printf("Server is listening on %v...", address)
+
+  fmt.Printf("Connecting to data provider...")
+
+  // MongoData
+  dp = mongoData.MongoProvider{}.Init(mongoData.Config{URI: mongoURI})
+  defer dp.Shutdown()
+
+  // MapClient
+  setupMapClient()
+
+  s := grpc.NewServer()
+  grpc2.RegisterRoadTripPlayerServer(s, &playerServer{})
+
+  fmt.Println("Ready")
+
+  s.Serve(lis)
+}
+
+/******************************
+ *
+ * Helper methods
+ *
+ ******************************/
+
+func setupMapClient() {
+  opts := grpc.WithInsecure()
+  serverAddress := mapServerHost + ":" + mapServerPort
+  cc, err := grpc.Dial(serverAddress, opts)
+  if err != nil {
+    log.Fatalln(err)
+  }
+
+  mapClient = mgrpc.NewRoadTripMapClient(cc)
 }
 
 // getUUID returns the UUID from the metadata
@@ -44,6 +93,12 @@ func getUUID(ctx context.Context) (string, error) {
   }
   return "", errors.New("UUID not in metadata")
 }
+
+/******************************
+ *
+ * Player Service API methods
+ *
+ ******************************/
 
 // CreateCharacter creates a new character record in the datastore and returns it.
 // Car is a singleton associated with character. The new character will get a new car assigned to it.
@@ -105,9 +160,9 @@ func (*playerServer) GetCharacter(ctx context.Context, request *grpc2.GetCharact
       Plate:   ch.Car.Plate,
       CarName: ch.Car.Name,
       Location: &grpc2.Location{
-        TownId:   ch.Car.Location.TownId,
-        RoadId:   ch.Car.Location.RoadId,
-        Position: ch.Car.Location.Position,
+        TownId:        ch.Car.Location.TownId,
+        RoadId:        ch.Car.Location.RoadId,
+        PositionMiles: ch.Car.Location.PositionMiles,
       },
     },
   }
@@ -115,17 +170,71 @@ func (*playerServer) GetCharacter(ctx context.Context, request *grpc2.GetCharact
   return result, nil
 }
 
-func setupMapClient() {
-  opts := grpc.WithInsecure()
-  serverAddress := mapServerHost + ":" + mapServerPort
-  cc, err := grpc.Dial(serverAddress, opts)
+// GetCar returns the car if the player has access to it.
+func (*playerServer) GetCar(ctx context.Context, request *grpc2.GetCarRequest) (*grpc2.Car, error) {
+  // currently we only allow you to get info on your own car so we look up the requested car on your own char
+  contextUUID, err := getUUID(ctx)
   if err != nil {
-    log.Fatalln(err)
+    return nil, err
+  }
+  ch, err := dp.GetCharacter(contextUUID)
+  if err != nil {
+    return nil, status.Errorf(codes.NotFound, "cannot find your character")
   }
 
-  mapClient = mgrpc.NewRoadTripMapClient(cc)
+  if ch.Car == nil {
+    return nil, status.Errorf(codes.NotFound, "character is missing car")
+  }
+
+  if ch.Car.Id != request.Id {
+    return nil, status.Errorf(codes.NotFound, "can only get your own car currently")
+  }
+
+  result := &grpc2.Car{
+    Id:      ch.Car.Id,
+    Plate:   ch.Car.Plate,
+    CarName: ch.Car.Name,
+    Location: &grpc2.Location{
+      TownId:        ch.Car.Location.TownId,
+      RoadId:        ch.Car.Location.RoadId,
+      PositionMiles: ch.Car.Location.PositionMiles,
+    },
+  }
+
+  return result, nil
 }
 
+// GetCarTrip returns the car's trip if the player has access to the car.
+func (*playerServer) GetCarTrip(ctx context.Context, request *grpc2.GetCarTripRequest) (*grpc2.Trip, error) {
+  // currently we only allow you to get info on your own car so we look up the requested car on your own char
+  contextUUID, err := getUUID(ctx)
+  if err != nil {
+    return nil, err
+  }
+  // player has access to car if they own it or (eventually) if they are riding in it
+  ch, err := dp.GetCharacter(contextUUID)
+  if err != nil {
+    return nil, status.Errorf(codes.NotFound, "cannot find your character")
+  }
+
+  if ch.Car == nil {
+    return nil, status.Errorf(codes.NotFound, "character is missing car")
+  }
+
+  if ch.Car.Id != request.CarId {
+    return nil, status.Errorf(codes.NotFound, "can only get trip for your own car currently")
+  }
+
+  if ch.Car.Trip == nil {
+    return &grpc2.Trip{}, nil
+  }
+  
+  return &grpc2.Trip{
+    TownIds: ch.Car.Trip.TownIds,
+  }, nil
+}
+
+// GetTown returns the requested town. Proxies request to the map service.
 func (*playerServer) GetTown(ctx context.Context, request *grpc2.GetTownRequest) (*grpc2.Town, error) {
   ctx, _ = context.WithTimeout(ctx, 10*time.Second)
   town, err := mapClient.GetTown(ctx, &mgrpc.GetTownRequest{Id: request.Id})
@@ -139,34 +248,4 @@ func (*playerServer) GetTown(ctx context.Context, request *grpc2.GetTownRequest)
     Description: town.Description,
   }
   return result, nil
-}
-
-/******************************
- *
- * Main
- *
- ******************************/
-
-func main() {
-  fmt.Println("Server started")
-  address := "0.0.0.0" + ":" + port
-  lis, err := net.Listen("tcp", address)
-  if err != nil {
-    log.Fatalf("Error %v", err)
-  }
-  fmt.Printf("Server is listening on %v...", address)
-
-  fmt.Printf("Connecting to data provider...")
-
-  // MongoData
-  dp = mongoData.MongoProvider{}.Init(mongoData.Config{URI: mongoURI})
-  defer dp.Shutdown()
-
-  // MapClient
-  setupMapClient()
-
-  s := grpc.NewServer()
-  grpc2.RegisterRoadTripPlayerServer(s, &playerServer{})
-
-  s.Serve(lis)
 }

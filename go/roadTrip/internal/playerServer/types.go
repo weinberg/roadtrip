@@ -5,23 +5,30 @@ package playerServer
  */
 
 type Car struct {
-  Id         string
-  Name       string
-  Plate      string
-  Location   Location
-}
-
-// A location is either in a town or on a road. If on a road the position is from (0..1) from road.TownA -> road.TownB
-type Location struct {
-  RoadId string
-  Position float32
-  TownId string
+  Id          string
+  Name        string
+  Plate       string
+  VelocityMPH float32
+  Direction   int32
+  Location    *Location
+  Trip        *Trip
 }
 
 type Character struct {
-  Id string
+  Id   string
   Name string
   Car  *Car
+}
+
+// A location is either in a town or on a road. If on a road the position is miles from town a->b
+type Location struct {
+  RoadId        string
+  PositionMiles float32
+  TownId        string
+}
+
+type Trip struct {
+  TownIds []string
 }
 
 /**
@@ -32,7 +39,7 @@ type InitConfig struct {
 }
 
 type DataProvider interface {
-  Init(c InitConfig) (DataProvider)
+  Init(c InitConfig) DataProvider
   Shutdown()
 
   CreateCharacter(name string) (Character, error)
@@ -44,6 +51,5 @@ type DataProvider interface {
   GetCar(UUID string) (Car, error)
   GetCarByPlate(plate string) (Car, error)
   GetCarByCharacter(UUID string) (Car, error)
-
-  GetLocation(id string) (Location, error)
+  GetTripByCar(UUID string) (Trip, error)
 }

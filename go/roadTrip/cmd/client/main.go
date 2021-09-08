@@ -13,13 +13,22 @@ import (
   "log"
   "os"
   "strings"
+  "time"
 )
 
 var id string
 var reader *bufio.Reader
 var client psgrpc.RoadTripPlayerClient
-var ctx context.Context
 var character *psgrpc.Character
+
+func getCtx() context.Context {
+  // add id to grpc headers. for now, we only allow one character
+  md := metadata.New(map[string]string{"character_uuid": id})
+  ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+  ctx = metadata.NewOutgoingContext(ctx, md)
+
+  return ctx
+}
 
 func setup() {
   /*
@@ -27,7 +36,7 @@ func setup() {
      if characterInfo list is empty, add one
      setup grpc with first characterInfo id
      take first entry in characterInfo list and get character from server
-     now we have a id for the grpc header and a pb.character
+     now we have an id for the grpc header and a pb.character
   */
   // read config file. LoadConfig will create config if it doesn't exist.
   // the new config file will have no characterInfos
@@ -47,15 +56,11 @@ func setup() {
     }
   }
 
-  // currently only use first character
+  // currently, only use first character
   id = conf.Characters[0].Id
 
-  // add id to grpc headers. for now we only allow one character
-  md := metadata.New(map[string]string{"character_uuid": id})
-  ctx = metadata.NewOutgoingContext(context.Background(), md)
-
   // get character from server
-  character, err = client.GetCharacter(ctx, &psgrpc.GetCharacterRequest{Id: id})
+  character, err = client.GetCharacter(getCtx(), &psgrpc.GetCharacterRequest{Id: id})
   if err != nil {
     st := status.Convert(err)
     if st.Code() == codes.NotFound {
@@ -83,14 +88,13 @@ func setup() {
 func setupGrpc(conf config.ClientConfig) {
   opts := grpc.WithInsecure()
   serverAddress := conf.Server + ":" + conf.Port
+  fmt.Printf("Connecting to %v\n", serverAddress)
   cc, err := grpc.Dial(serverAddress, opts)
   if err != nil {
     log.Fatalln(err)
   }
 
   client = psgrpc.NewRoadTripPlayerClient(cc)
-  md := metadata.New(map[string]string{"character_uuid": id})
-  ctx = metadata.NewOutgoingContext(context.Background(), md)
 }
 
 func createNewCharacter() *psgrpc.Character {
@@ -101,11 +105,12 @@ func createNewCharacter() *psgrpc.Character {
     name, _ = reader.ReadString('\n')
     name = strings.TrimRight(name, "\r\n")
     if name == "" {
-      fmt.Println("That name is too short.") }
+      fmt.Println("That name is too short.")
+    }
   }
 
   // create in server
-  char, err := client.CreateCharacter(ctx, &psgrpc.CreateCharacterRequest{
+  char, err := client.CreateCharacter(getCtx(), &psgrpc.CreateCharacterRequest{
     CaptchaId:     "",
     CharacterName: name,
   })
@@ -121,6 +126,21 @@ func createNewCharacter() *psgrpc.Character {
   }
 
   return char
+}
+
+func showTrip() {
+  trip, err := client.GetCarTrip(getCtx(), &psgrpc.GetCarTripRequest{
+    CarId: character.Car.Id,
+  })
+
+  if err != nil {
+    log.Fatalln("Cannot get trip: ", err)
+  }
+
+  fmt.Printf("Current trip plan:\n")
+  for _, i := range trip.TownIds {
+    fmt.Printf("Town: %v\n", i)
+  }
 }
 
 func welcome() {
@@ -145,7 +165,7 @@ func printStatus() {
   fmt.Printf("Location:\n")
   fmt.Printf("  Town : %v\n", character.Car.Location.TownId)
   fmt.Printf("  Road : %v\n", character.Car.Location.RoadId)
-  fmt.Printf("  Position : %v\n", character.Car.Location.Position)
+  fmt.Printf("  Position : %v\n", character.Car.Location.PositionMiles)
 
   town, err := client.GetTown(context.Background(), &psgrpc.GetTownRequest{Id: character.Car.Location.TownId})
   if err != nil {
@@ -155,6 +175,7 @@ func printStatus() {
   fmt.Printf("  State: %v\n", town.StateId)
   fmt.Printf("  Town : %v\n", town.TownName)
   fmt.Printf("  Info : %v\n", town.Description)
+  showTrip()
 }
 
 // main

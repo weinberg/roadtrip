@@ -43,7 +43,7 @@ func (*mapServer) GetTown(ctx context.Context, request *rpc.GetTownRequest) (*rp
  ******************************/
 
 func main() {
-  fmt.Println("Server started")
+  fmt.Println("MapServer started")
   address := "0.0.0.0:" + port
   lis, err := net.Listen("tcp", address)
   if err != nil {

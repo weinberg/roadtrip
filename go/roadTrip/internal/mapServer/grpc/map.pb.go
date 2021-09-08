@@ -134,7 +134,7 @@ type Road struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id          string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"` // format "states/colorado/roads/i-25"
+	Id          string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"` // format "roads/i-25"
 	DisplayName string `protobuf:"bytes,2,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
 	LengthMiles int32  `protobuf:"varint,3,opt,name=length_miles,json=lengthMiles,proto3" json:"length_miles,omitempty"`
 	TownA       string `protobuf:"bytes,4,opt,name=town_a,json=townA,proto3" json:"town_a,omitempty"`

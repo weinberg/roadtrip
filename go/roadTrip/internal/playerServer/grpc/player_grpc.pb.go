@@ -23,6 +23,8 @@ type RoadTripPlayerClient interface {
 	UpdateCharacter(ctx context.Context, in *UpdateCharacterRequest, opts ...grpc.CallOption) (*Character, error)
 	UpdateCar(ctx context.Context, in *UpdateCarRequest, opts ...grpc.CallOption) (*Car, error)
 	GetTown(ctx context.Context, in *GetTownRequest, opts ...grpc.CallOption) (*Town, error)
+	GetCar(ctx context.Context, in *GetCarRequest, opts ...grpc.CallOption) (*Car, error)
+	GetCarTrip(ctx context.Context, in *GetCarTripRequest, opts ...grpc.CallOption) (*Trip, error)
 }
 
 type roadTripPlayerClient struct {
@@ -78,6 +80,24 @@ func (c *roadTripPlayerClient) GetTown(ctx context.Context, in *GetTownRequest, 
 	return out, nil
 }
 
+func (c *roadTripPlayerClient) GetCar(ctx context.Context, in *GetCarRequest, opts ...grpc.CallOption) (*Car, error) {
+	out := new(Car)
+	err := c.cc.Invoke(ctx, "/roadtrip.RoadTripPlayer/GetCar", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *roadTripPlayerClient) GetCarTrip(ctx context.Context, in *GetCarTripRequest, opts ...grpc.CallOption) (*Trip, error) {
+	out := new(Trip)
+	err := c.cc.Invoke(ctx, "/roadtrip.RoadTripPlayer/GetCarTrip", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RoadTripPlayerServer is the server API for RoadTripPlayer service.
 // All implementations must embed UnimplementedRoadTripPlayerServer
 // for forward compatibility
@@ -87,6 +107,8 @@ type RoadTripPlayerServer interface {
 	UpdateCharacter(context.Context, *UpdateCharacterRequest) (*Character, error)
 	UpdateCar(context.Context, *UpdateCarRequest) (*Car, error)
 	GetTown(context.Context, *GetTownRequest) (*Town, error)
+	GetCar(context.Context, *GetCarRequest) (*Car, error)
+	GetCarTrip(context.Context, *GetCarTripRequest) (*Trip, error)
 	mustEmbedUnimplementedRoadTripPlayerServer()
 }
 
@@ -108,6 +130,12 @@ func (UnimplementedRoadTripPlayerServer) UpdateCar(context.Context, *UpdateCarRe
 }
 func (UnimplementedRoadTripPlayerServer) GetTown(context.Context, *GetTownRequest) (*Town, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTown not implemented")
+}
+func (UnimplementedRoadTripPlayerServer) GetCar(context.Context, *GetCarRequest) (*Car, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCar not implemented")
+}
+func (UnimplementedRoadTripPlayerServer) GetCarTrip(context.Context, *GetCarTripRequest) (*Trip, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCarTrip not implemented")
 }
 func (UnimplementedRoadTripPlayerServer) mustEmbedUnimplementedRoadTripPlayerServer() {}
 
@@ -212,6 +240,42 @@ func _RoadTripPlayer_GetTown_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RoadTripPlayer_GetCar_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCarRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoadTripPlayerServer).GetCar(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/roadtrip.RoadTripPlayer/GetCar",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoadTripPlayerServer).GetCar(ctx, req.(*GetCarRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RoadTripPlayer_GetCarTrip_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCarTripRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoadTripPlayerServer).GetCarTrip(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/roadtrip.RoadTripPlayer/GetCarTrip",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoadTripPlayerServer).GetCarTrip(ctx, req.(*GetCarTripRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // RoadTripPlayer_ServiceDesc is the grpc.ServiceDesc for RoadTripPlayer service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -238,6 +302,14 @@ var RoadTripPlayer_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetTown",
 			Handler:    _RoadTripPlayer_GetTown_Handler,
+		},
+		{
+			MethodName: "GetCar",
+			Handler:    _RoadTripPlayer_GetCar_Handler,
+		},
+		{
+			MethodName: "GetCarTrip",
+			Handler:    _RoadTripPlayer_GetCarTrip_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

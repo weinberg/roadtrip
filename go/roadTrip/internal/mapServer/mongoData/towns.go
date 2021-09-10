@@ -3,6 +3,7 @@ package mongoData
 import (
   context "context"
   "errors"
+  "fmt"
   . "github.com/brickshot/roadtrip/internal/mapServer"
   "go.mongodb.org/mongo-driver/bson"
   "go.mongodb.org/mongo-driver/mongo"
@@ -32,6 +33,8 @@ func (d MongoProvider) GetTown(id string) (Town, error) {
   } else if err != nil {
     log.Fatal(err)
   }
+
+  fmt.Printf("mongoData:GetTown:result: %v", result)
 
   return result, nil
 }

@@ -5,30 +5,37 @@ package playerServer
  */
 
 type Car struct {
-  Id          string
-  Name        string
-  Plate       string
-  VelocityMPH float32
-  Direction   int32
-  Location    *Location
-  Trip        *Trip
+  Id                         string    `bson:"id"`
+  Name                       string    `bson:"name"`
+  Plate                      string    `bson:"plate"`
+  VelocityMph                float32   `bson:"velocity_mph"`
+  Direction                  int32     `bson:"direction"`
+  Location                   *Location `bson:"location"`
+  LastLocationUpdateTimeUnix int64     `bson:"last_location_update_time_unix"`
+  Trip                       *Trip     `bson:"trip"`
+  OwnerId                    string    `bson:"owner_id"`
 }
 
 type Character struct {
-  Id   string
-  Name string
-  Car  *Car
+  Id   string `bson:"id"`
+  Name string `bson:"name"`
+  Car  *Car   `bson:"car"`
 }
 
 // A location is either in a town or on a road. If on a road the position is miles from town a->b
 type Location struct {
-  RoadId        string
-  PositionMiles float32
-  TownId        string
+  RoadId        string  `bson:"road_id"`
+  PositionMiles float32 `bson:"position_miles"`
+  TownId        string  `bson:"town_id"`
+}
+
+type TripEntry struct {
+  Id   string `bson:"id"`
+  Type string `bson:"type"`
 }
 
 type Trip struct {
-  TownIds []string
+  Entries []TripEntry `bson:"entries"`
 }
 
 /**

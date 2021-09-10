@@ -23,9 +23,8 @@ func ShutdownCars() {
   carsColl = nil
 }
 
-// CreateCar stores a car in the datastore. The id and plate will be assigned.
-// Currently all cars start in Seattle.
-func (d MongoProvider) CreateCar(c Car, owner Character) (Car, error) {
+// CreateCar stores a car in the datastore with the given owner and location. The id and plate will be assigned.
+func (d MongoProvider) CreateCar(c Car, owner Character, location Location) (Car, error) {
   // find an unused plate number
   var plate string
   for i := 0; i < 10; i++ {
@@ -42,28 +41,18 @@ func (d MongoProvider) CreateCar(c Car, owner Character) (Car, error) {
     return Car{}, errors.New("Could not find un-used plate in 10 attempts.")
   }
 
+  c.Id = uuid.NewString()
+  c.Plate = plate
+  c.OwnerId = owner.Id
+  c.Location = &location
+  c.VelocityMph = 0
+
   var ctx context.Context
   ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
-  result, err := carsColl.InsertOne(ctx, bson.M{
-    "id":        uuid.NewString(),
-    "plate":     plate,
-    "name":      c.Name,
-    "owner_id":  owner.Id,
-    "direction": 0,
-    "speed_mph": 0,
-    "location": Location{
-      RoadId:        "",
-      PositionMiles: 0,
-      TownId:        "states/washington/towns/seattle",
-    },
-    "trip": Trip{
-      TownIds: []string{
-        "states/washington/towns/seattle",
-        "states/washington/towns/ellensburg",
-        "states/oregon/towns/hermiston",
-      },
-    },
-  })
+  m, err := bson.Marshal(c)
+  if err != nil { return Car{}, err }
+
+  result, err := carsColl.InsertOne(ctx, m)
   if err != nil {
     return Car{}, err
   }
@@ -99,4 +88,37 @@ func (d MongoProvider) GetCarByPlate(plate string) (Car, error) {
 // GetCharacters returns the characters in a car.
 func (d MongoProvider) GetCharacters(id string) ([]Character, error) {
   return []Character{}, nil
+}
+
+func (d MongoProvider) GetCars() ([]Car, error) {
+  ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+  cur, err := carsColl.Find(ctx, bson.D{})
+  if err != nil {
+    return []Car{}, err
+  }
+  defer cur.Close(context.Background())
+
+  var results []Car
+  if err = cur.All(context.Background(), &results); err != nil {
+    log.Fatal(err)
+  }
+  return results, nil
+}
+
+// UpdateCar updates a car in the datastore.
+func (d MongoProvider) UpdateCar(c Car) error {
+  var ctx context.Context
+  ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
+  m, err := bson.Marshal(c)
+  if err != nil {
+    return err
+  }
+  _, err = carsColl.ReplaceOne(
+    ctx,
+    bson.M{"id": c.Id},
+    m)
+  if err != nil {
+    return err
+  }
+  return nil
 }

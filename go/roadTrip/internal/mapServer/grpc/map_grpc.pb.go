@@ -19,6 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type RoadTripMapClient interface {
 	GetTown(ctx context.Context, in *GetTownRequest, opts ...grpc.CallOption) (*Town, error)
+	GetRoad(ctx context.Context, in *GetRoadRequest, opts ...grpc.CallOption) (*Road, error)
 	ListStates(ctx context.Context, in *ListStatesRequest, opts ...grpc.CallOption) (*ListStatesResponse, error)
 	ListTowns(ctx context.Context, in *ListTownsRequest, opts ...grpc.CallOption) (*ListTownsResponse, error)
 	ListRoads(ctx context.Context, in *ListRoadsRequest, opts ...grpc.CallOption) (*ListRoadsResponse, error)
@@ -35,6 +36,15 @@ func NewRoadTripMapClient(cc grpc.ClientConnInterface) RoadTripMapClient {
 func (c *roadTripMapClient) GetTown(ctx context.Context, in *GetTownRequest, opts ...grpc.CallOption) (*Town, error) {
 	out := new(Town)
 	err := c.cc.Invoke(ctx, "/roadtrip_map.RoadTripMap/GetTown", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *roadTripMapClient) GetRoad(ctx context.Context, in *GetRoadRequest, opts ...grpc.CallOption) (*Road, error) {
+	out := new(Road)
+	err := c.cc.Invoke(ctx, "/roadtrip_map.RoadTripMap/GetRoad", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -73,6 +83,7 @@ func (c *roadTripMapClient) ListRoads(ctx context.Context, in *ListRoadsRequest,
 // for forward compatibility
 type RoadTripMapServer interface {
 	GetTown(context.Context, *GetTownRequest) (*Town, error)
+	GetRoad(context.Context, *GetRoadRequest) (*Road, error)
 	ListStates(context.Context, *ListStatesRequest) (*ListStatesResponse, error)
 	ListTowns(context.Context, *ListTownsRequest) (*ListTownsResponse, error)
 	ListRoads(context.Context, *ListRoadsRequest) (*ListRoadsResponse, error)
@@ -85,6 +96,9 @@ type UnimplementedRoadTripMapServer struct {
 
 func (UnimplementedRoadTripMapServer) GetTown(context.Context, *GetTownRequest) (*Town, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTown not implemented")
+}
+func (UnimplementedRoadTripMapServer) GetRoad(context.Context, *GetRoadRequest) (*Road, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRoad not implemented")
 }
 func (UnimplementedRoadTripMapServer) ListStates(context.Context, *ListStatesRequest) (*ListStatesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListStates not implemented")
@@ -122,6 +136,24 @@ func _RoadTripMap_GetTown_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(RoadTripMapServer).GetTown(ctx, req.(*GetTownRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RoadTripMap_GetRoad_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRoadRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoadTripMapServer).GetRoad(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/roadtrip_map.RoadTripMap/GetRoad",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoadTripMapServer).GetRoad(ctx, req.(*GetRoadRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -190,6 +222,10 @@ var RoadTripMap_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetTown",
 			Handler:    _RoadTripMap_GetTown_Handler,
+		},
+		{
+			MethodName: "GetRoad",
+			Handler:    _RoadTripMap_GetRoad_Handler,
 		},
 		{
 			MethodName: "ListStates",

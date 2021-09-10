@@ -14,11 +14,19 @@ build:
     context: .
     docker:
       dockerfile: docker/playerServer/Dockerfile
+  - image: docker-updateservice
+    sync:
+      infer:
+        - '.'
+    context: .
+    docker:
+      dockerfile: docker/updateService/Dockerfile
 deploy:
   kubectl:
     manifests:
-    - docker/mapserver/deployment.yaml
-    - docker/playerserver/deployment.yaml
+    - docker/mapServer/deployment.yaml
+    - docker/playerServer/deployment.yaml
+    - docker/updateService/deployment.yaml
     - docker/mongodb/mongodb.yaml
 portForward:
 - resourceType: service
@@ -27,3 +35,6 @@ portForward:
 - resourceType: service
   resourceName: mongo-service
   port: 27017
+- resourceType: service
+  resourceName: docker-updateservice
+  port: 9068

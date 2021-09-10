@@ -5,22 +5,23 @@ package mapServer
  */
 
 type Town struct {
-  Id          string
-  Name        string
-  Description string
-  State       string
+  Id          string `bson:"id"`
+  DisplayName string `bson:"display_name"`
+  Description string `bson:"description"`
+  State       string `bson:"state"`
 }
 
 type Road struct {
-  Id    string
-  Name  string
-  TownA string
-  TownB string
+  Id          string `bson:"id"`
+  DisplayName string `bson:"display_name"`
+  TownAId     string `bson:"town_a_id"`
+  TownBId     string `bson:"town_b_id"`
+  LengthMiles int32  `bson:"length_miles"`
 }
 
 type State struct {
-  Id   string
-  Name string
+  Id   string `bson:"id"`
+  Name string `bson:"name"`
 }
 
 /**

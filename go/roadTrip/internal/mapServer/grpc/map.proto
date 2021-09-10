@@ -11,6 +11,7 @@ option go_package = "insofar.com/roadtrip_map/map_grpc";
 
 service RoadTripMap  {
   rpc GetTown(GetTownRequest) returns (Town) {}
+  rpc GetRoad(GetRoadRequest) returns (Road) {}
   rpc ListStates(ListStatesRequest) returns (ListStatesResponse) {}
   rpc ListTowns(ListTownsRequest) returns (ListTownsResponse) {}
   rpc ListRoads(ListRoadsRequest) returns (ListRoadsResponse) {}
@@ -40,6 +41,10 @@ message State {
 }
 
 message GetTownRequest {
+  string id = 1;
+}
+
+message GetRoadRequest {
   string id = 1;
 }
 

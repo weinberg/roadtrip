@@ -38,8 +38,13 @@ message Town {
   string description = 4;
 }
 
+message TripEntry {
+  string id = 1;
+  string type = 2;
+}
+
 message Trip {
-  repeated string town_ids = 1;
+  repeated TripEntry entries = 1;
 }
 
 /*************************************

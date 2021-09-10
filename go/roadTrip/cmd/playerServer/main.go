@@ -20,8 +20,6 @@ import (
 var dp mongoData.MongoProvider
 var mapClient mgrpc.RoadTripMapClient
 
-// var dp memoryData.MemoryProvider
-
 const (
   port          = "9066"
   mongoURI      = "mongodb://root:example@mongo-service:27017"
@@ -113,10 +111,41 @@ func (*playerServer) CreateCharacter(ctx context.Context, request *grpc2.CreateC
   }
 
   // create car for new character
-  car, err := dp.CreateCar(Car{}, nc)
+  // we always start in seattle for now
+  ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
+  start, err := mapClient.GetTown(ctx, &mgrpc.GetTownRequest{Id: "states/washington/towns/seattle"})
+  if err != nil {
+    dp.DeleteCharacter(nc.Id)
+    return &grpc2.Character{}, status.Errorf(codes.Internal, "Could find starting town for new character: "+err.Error())
+  }
+  // create car
+  car, err := dp.CreateCar(Car{}, nc, Location{TownId: start.Id})
   if err != nil {
     dp.DeleteCharacter(nc.Id)
     return &grpc2.Character{}, status.Errorf(codes.Internal, "Could not create car for new character: "+err.Error())
+  }
+  // update car with trip
+  // hardcoded for now
+  car.Trip = &Trip{
+    Entries: []TripEntry{
+      TripEntry{Id: "states/washington/towns/seattle", Type: "town"},
+      TripEntry{Id: "roads/i-90", Type: "road"},
+      TripEntry{Id: "states/washington/towns/ellensburg", Type: "town"},
+      TripEntry{Id: "roads/i-82", Type: "road"},
+      TripEntry{Id: "states/oregon/towns/hermiston", Type: "town"},
+      TripEntry{Id: "roads/i-84-a", Type: "road"},
+      TripEntry{Id: "states/idaho/towns/boise", Type: "town"},
+      TripEntry{Id: "roads/i-84-b", Type: "road"},
+      TripEntry{Id: "states/utah/towns/ogden", Type: "town"},
+      TripEntry{Id: "roads/i-80-a", Type: "road"},
+      TripEntry{Id: "states/wyoming/towns/evanston", Type: "town"},
+      TripEntry{Id: "roads/i-80-b", Type: "road"},
+      TripEntry{Id: "states/wyoming/towns/cheyenne", Type: "town"},
+    },
+  }
+  err = dp.UpdateCar(car)
+  if err != nil {
+    return &grpc2.Character{}, status.Errorf(codes.Internal, "Could assign trip to new car: "+err.Error())
   }
 
   r := &grpc2.Character{
@@ -228,9 +257,14 @@ func (*playerServer) GetCarTrip(ctx context.Context, request *grpc2.GetCarTripRe
   if ch.Car.Trip == nil {
     return &grpc2.Trip{}, nil
   }
-  
+
+  var entries []*grpc2.TripEntry = []*grpc2.TripEntry{}
+  for _,e := range ch.Car.Trip.Entries {
+    entries = append(entries, &grpc2.TripEntry{ Id:   e.Id, Type: e.Type })
+  }
+
   return &grpc2.Trip{
-    TownIds: ch.Car.Trip.TownIds,
+    Entries: entries,
   }, nil
 }
 

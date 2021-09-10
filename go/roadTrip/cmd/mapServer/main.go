@@ -32,7 +32,23 @@ func (*mapServer) GetTown(ctx context.Context, request *rpc.GetTownRequest) (*rp
     Id:          t.Id,
     Description: t.Description,
     State:       t.State,
-    DisplayName: t.Name,
+    DisplayName: t.DisplayName,
+  }, nil
+}
+
+// GetRoad gets a road by id
+func (*mapServer) GetRoad(ctx context.Context, request *rpc.GetRoadRequest) (*rpc.Road, error) {
+  fmt.Printf("In GetRoad: id = %v\n", request.Id)
+  r, err := dp.GetRoad(request.Id)
+  if err != nil {
+    return nil, err
+  }
+  return &rpc.Road{
+    Id:          r.Id,
+    DisplayName: r.DisplayName,
+    LengthMiles: r.LengthMiles,
+    TownA:       r.TownAId,
+    TownB:       r.TownBId,
   }, nil
 }
 

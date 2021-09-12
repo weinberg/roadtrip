@@ -114,6 +114,7 @@ func (*playerServer) CreateCharacter(ctx context.Context, request *grpc2.CreateC
   // we always start in seattle for now
   ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
   start, err := mapClient.GetTown(ctx, &mgrpc.GetTownRequest{Id: "states/washington/towns/seattle"})
+
   if err != nil {
     dp.DeleteCharacter(nc.Id)
     return &grpc2.Character{}, status.Errorf(codes.Internal, "Could find starting town for new character: "+err.Error())
@@ -143,6 +144,8 @@ func (*playerServer) CreateCharacter(ctx context.Context, request *grpc2.CreateC
       TripEntry{Id: "states/wyoming/towns/cheyenne", Type: "town"},
     },
   }
+  car.VelocityMph = 60
+  car.LastLocationUpdateTimeUnix = time.Now().Unix()
   err = dp.UpdateCar(car)
   if err != nil {
     return &grpc2.Character{}, status.Errorf(codes.Internal, "Could assign trip to new car: "+err.Error())
@@ -259,8 +262,26 @@ func (*playerServer) GetCarTrip(ctx context.Context, request *grpc2.GetCarTripRe
   }
 
   var entries []*grpc2.TripEntry = []*grpc2.TripEntry{}
+  ctx, _ = context.WithTimeout(context.Background(), time.Second * 20)
   for _,e := range ch.Car.Trip.Entries {
-    entries = append(entries, &grpc2.TripEntry{ Id:   e.Id, Type: e.Type })
+    var displayName string
+    if e.Type == "road" {
+      fmt.Printf("Loading road with id %v\n", e.Id)
+      road, err := mapClient.GetRoad(ctx, &mgrpc.GetRoadRequest{Id: e.Id})
+      if err != nil {
+        return nil, status.Errorf(codes.Internal, "Error loading a trip entry (road: %v) from db: ", e.Id, err)
+      }
+      displayName = road.DisplayName
+    } else if e.Type == "town" {
+      town, err := mapClient.GetTown(ctx, &mgrpc.GetTownRequest{Id: e.Id})
+      if err != nil {
+        return nil, status.Errorf(codes.Internal, "Error loading a trip entry (town: %v) from db: ", e.Id, err)
+      }
+      displayName = town.DisplayName
+    }
+
+    // entries = append(entries, &grpc2.TripEntry{ Id:   e.Id, Type: e.Type, DisplayName: displayName})
+    entries = append(entries, &grpc2.TripEntry{ Id: e.Id, Type: e.Type, DisplayName: displayName})
   }
 
   return &grpc2.Trip{

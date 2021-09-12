@@ -23,7 +23,6 @@ type mapServer struct {
 
 // GetTown gets a town by id
 func (*mapServer) GetTown(ctx context.Context, request *rpc.GetTownRequest) (*rpc.Town, error) {
-  fmt.Printf("In GetTown: id = %v\n", request.Id)
   t, err := dp.GetTown(request.Id)
   if err != nil {
     return nil, err
@@ -38,7 +37,6 @@ func (*mapServer) GetTown(ctx context.Context, request *rpc.GetTownRequest) (*rp
 
 // GetRoad gets a road by id
 func (*mapServer) GetRoad(ctx context.Context, request *rpc.GetRoadRequest) (*rpc.Road, error) {
-  fmt.Printf("In GetRoad: id = %v\n", request.Id)
   r, err := dp.GetRoad(request.Id)
   if err != nil {
     return nil, err
@@ -65,9 +63,8 @@ func main() {
   if err != nil {
     log.Fatalf("Error %v", err)
   }
-  fmt.Printf("Server is listening on %v...", address)
-
-  fmt.Printf("Connecting to data provider...")
+  fmt.Println("Server is listening on %v...", address)
+  fmt.Println("Connecting to data provider...")
 
   // MongoData
   dp = mongoData.MongoProvider{}.Init(mongoData.Config{URI: mongoURI})

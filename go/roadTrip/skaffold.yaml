@@ -4,23 +4,21 @@ metadata:
   name: roadtrip
 build:
   local:
+    useBuildkit: true
     concurrency: 4
   artifacts:
   - image: docker-mapserver
     context: .
     docker:
-      dockerfile: docker/mapServer/Dockerfile
+      dockerfile: docker/mapServer/Dockerfile.multipart
   - image: docker-playerserver
     context: .
     docker:
-      dockerfile: docker/playerServer/Dockerfile
+      dockerfile: docker/playerServer/Dockerfile.multipart
   - image: docker-updateservice
-    sync:
-      infer:
-        - '.'
     context: .
     docker:
-      dockerfile: docker/updateService/Dockerfile
+      dockerfile: docker/updateService/Dockerfile.multipart
 deploy:
   kubectl:
     manifests:
@@ -35,6 +33,3 @@ portForward:
 - resourceType: service
   resourceName: mongo-service
   port: 27017
-- resourceType: service
-  resourceName: docker-updateservice
-  port: 9068

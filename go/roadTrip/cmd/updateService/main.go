@@ -97,7 +97,7 @@ func moveCars() {
   if err != nil {
     log.Fatalln(err)
   }
-  fmt.Printf("UpdateService: got %v cars\n", len(cars))
+  fmt.Printf("UpdateService: %v cars\n", len(cars))
   for _, car := range cars {
     fmt.Printf("Car:\n")
     fmt.Printf("\tPlate:        %v\n", car.Plate)
@@ -152,7 +152,7 @@ func moveCars() {
 
     vmps := float64(car.VelocityMph / 3600)
     newMiles := car.Location.PositionMiles + float32(vmps * diff.Seconds())
-    fmt.Printf("Updating position to: %v\n", newMiles)
+    fmt.Printf("Updating position to: %v...\n", newMiles)
     car.Location.PositionMiles = newMiles
     car.LastLocationUpdateTimeUnix = now.Unix()
 

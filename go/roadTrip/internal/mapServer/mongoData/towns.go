@@ -3,11 +3,11 @@ package mongoData
 import (
   context "context"
   "errors"
-  "fmt"
   . "github.com/brickshot/roadtrip/internal/mapServer"
   "go.mongodb.org/mongo-driver/bson"
   "go.mongodb.org/mongo-driver/mongo"
   "log"
+  "time"
 )
 
 var townsColl *mongo.Collection
@@ -25,16 +25,13 @@ func ShutdownTowns() {
 func (d MongoProvider) GetTown(id string) (Town, error) {
   filter := bson.D{{"id", id}}
   result := Town{}
-  //ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-  ctx := context.Background()
+  ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
   err := townsColl.FindOne(ctx, filter).Decode(&result)
   if err == mongo.ErrNoDocuments {
     return Town{}, errors.New("Not found")
   } else if err != nil {
     log.Fatal(err)
   }
-
-  fmt.Printf("mongoData:GetTown:result: %v", result)
 
   return result, nil
 }

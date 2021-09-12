@@ -30,8 +30,9 @@ type Location struct {
 }
 
 type TripEntry struct {
-  Id   string `bson:"id"`
-  Type string `bson:"type"`
+  Id          string `bson:"id"`
+  Type        string `bson:"type"`
+  DisplayName string `bson:"display_name"`
 }
 
 type Trip struct {

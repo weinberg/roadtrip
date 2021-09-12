@@ -132,14 +132,17 @@ func showTrip() {
   trip, err := client.GetCarTrip(getCtx(), &psgrpc.GetCarTripRequest{
     CarId: character.Car.Id,
   })
-
   if err != nil {
     log.Fatalln("Cannot get trip: ", err)
   }
 
   fmt.Printf("Current trip plan:\n")
-  for _, i := range trip.TownIds {
-    fmt.Printf("Town: %v\n", i)
+  for _, e := range trip.Entries {
+    if e.Type == "town" {
+      fmt.Printf("Town: %v\n", e.DisplayName)
+    } else if e.Type == "road" {
+      fmt.Printf("Road: %v\n", e.DisplayName)
+    }
   }
 }
 

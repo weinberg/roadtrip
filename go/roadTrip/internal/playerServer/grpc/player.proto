@@ -41,6 +41,7 @@ message Town {
 message TripEntry {
   string id = 1;
   string type = 2;
+  string display_name = 3;
 }
 
 message Trip {

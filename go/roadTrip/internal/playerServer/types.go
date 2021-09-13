@@ -59,5 +59,4 @@ type DataProvider interface {
   GetCar(UUID string) (Car, error)
   GetCarByPlate(plate string) (Car, error)
   GetCarByCharacter(UUID string) (Car, error)
-  GetTripByCar(UUID string) (Trip, error)
 }

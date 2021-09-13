@@ -34,14 +34,21 @@ message Location {
 message Town {
   string id = 1;
   string state_id = 2;
-  string town_name = 3;
+  string display_name = 3;
   string description = 4;
+}
+
+message Road {
+  string id = 1;
+  string display_name = 2;
+  int32 length_miles = 3;
 }
 
 message TripEntry {
   string id = 1;
   string type = 2;
-  string display_name = 3;
+  Road road = 3;
+  Town town = 4;
 }
 
 message Trip {

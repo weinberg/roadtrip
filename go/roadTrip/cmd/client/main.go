@@ -137,11 +137,18 @@ func showTrip() {
   }
 
   fmt.Printf("Current trip plan:\n")
-  for _, e := range trip.Entries {
+  for i, e := range trip.Entries {
     if e.Type == "town" {
-      fmt.Printf("Town: %v\n", e.DisplayName)
+      if i == 0 {
+        fmt.Printf("╔═ ")
+      } else if i == len(trip.Entries)-1 {
+        fmt.Printf("╚═ ")
+      } else {
+        fmt.Printf("╠═ ")
+      }
+      fmt.Printf("%v\n", e.Town.DisplayName)
     } else if e.Type == "road" {
-      fmt.Printf("Road: %v\n", e.DisplayName)
+      fmt.Printf("║\n║  %v\n║\n", e.Road.DisplayName)
     }
   }
 }
@@ -176,7 +183,7 @@ func printStatus() {
   }
   fmt.Printf("Town Details:\n")
   fmt.Printf("  State: %v\n", town.StateId)
-  fmt.Printf("  Town : %v\n", town.TownName)
+  fmt.Printf("  Town : %v\n", town.DisplayName)
   fmt.Printf("  Info : %v\n", town.Description)
   showTrip()
 }

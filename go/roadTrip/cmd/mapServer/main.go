@@ -30,7 +30,7 @@ func (*mapServer) GetTown(ctx context.Context, request *rpc.GetTownRequest) (*rp
   return &rpc.Town{
     Id:          t.Id,
     Description: t.Description,
-    State:       t.State,
+    StateId:       t.StateId,
     DisplayName: t.DisplayName,
   }, nil
 }

@@ -8,7 +8,7 @@ type Town struct {
   Id          string `bson:"id"`
   DisplayName string `bson:"display_name"`
   Description string `bson:"description"`
-  State       string `bson:"state"`
+  StateId     string `bson:"state_id"`
 }
 
 type Road struct {

@@ -24,7 +24,7 @@ message Town {
   string id = 1; // format "states/colorado/towns/denver"
   string display_name = 2; // format "Denver"
   string description = 3;
-  string state = 4; // format "states/Colorado"
+  string state_id = 4; // format "states/Colorado"
 }
 
 message Road {

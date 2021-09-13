@@ -2,8 +2,10 @@ package main
 
 import (
   "context"
+  "errors"
   "fmt"
   mgrpc "github.com/brickshot/roadtrip/internal/mapServer/grpc"
+  . "github.com/brickshot/roadtrip/internal/playerServer"
   "github.com/brickshot/roadtrip/internal/playerServer/mongoData"
   "google.golang.org/grpc"
   "log"
@@ -107,58 +109,116 @@ func moveCars() {
     fmt.Printf("\tLast update:  %v\n", car.LastLocationUpdateTimeUnix)
     fmt.Printf("\tRoadID:        %v\n", car.Location.RoadId)
     fmt.Printf("\tTownID:        %v\n", car.Location.TownId)
-
-    var road *mgrpc.Road
-    var town *mgrpc.Town
+    fmt.Printf("\tMiles:         %v\n", car.Location.PositionMiles)
 
     if car.Location.RoadId != "" { // on a road
-      ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-      road, err = mapClient.GetRoad(ctx, &mgrpc.GetRoadRequest{
-        Id: car.Location.RoadId,
-      })
-      if err != nil { continue }
+      handleRoad(car)
     } else if car.Location.TownId != "" { // in a town
-      ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-      town, err = mapClient.GetTown(ctx, &mgrpc.GetTownRequest{
-        Id: car.Location.TownId,
-      })
-      if err != nil {
-        fmt.Println("Error: ", err)
-        continue
-      }
+      handleTown(car)
     }
 
-    fmt.Printf("Current Location:\n")
-    if road != nil {
-      fmt.Printf("\tOn Road:       %v\n", road.DisplayName)
-      fmt.Printf("\tLength:        %v miles\n", car.Location.RoadId)
-      fmt.Printf("\tPosition:      %v miles\n", car.Location.PositionMiles)
-    } else if town != nil {
-      fmt.Printf("\tIn Town:\n")
-      fmt.Printf("\tName:          %v\n", town.DisplayName)
-      fmt.Printf("\tDescription:    %v\n", town.Description)
+  }
+}
+
+// nextTripEntry returns the next trip entry for the car. If the car is at the end of the trip then nil.
+func nextTripEntry(car Car) (*TripEntry, error) {
+  var found bool = false
+  var i int
+  for _, l := range car.Trip.Entries {
+    if l.Id == car.Location.RoadId || l.Id == car.Location.TownId {
+      found = true
+      break
     }
-    if car.VelocityMph == 0 {
-      fmt.Printf("Car velocity is 0. Not updating position.\n")
-      continue
-    }
+    i++
+  }
 
-    lastUpdate := time.Unix(car.LastLocationUpdateTimeUnix, 0)
-    fmt.Printf("Last location update: %v\n", lastUpdate.Format(time.RFC850))
+  if !found {
+    return nil, errors.New("Car is at a location which is not found in it's own trip entries.")
+  }
 
-    now := time.Now()
-    diff := now.Sub(lastUpdate)
-    fmt.Printf("Duration since last update: %v\n", diff.String())
+  i++
+  if i >= len(car.Trip.Entries) {
+    return nil, nil
+  }
+  return &car.Trip.Entries[i], nil
+}
 
-    vmps := float64(car.VelocityMph / 3600)
-    newMiles := car.Location.PositionMiles + float32(vmps * diff.Seconds())
-    fmt.Printf("Updating position to: %v...\n", newMiles)
-    car.Location.PositionMiles = newMiles
-    car.LastLocationUpdateTimeUnix = now.Unix()
-
-    err := dp.UpdateCar(car)
-    if err != nil {
-      fmt.Printf("Error: %v\n", err)
+// handleTown when a car is in a town
+func handleTown(car Car) error {
+  next, err := nextTripEntry(car)
+  if err != nil {
+    return err
+  }
+  if next == nil {
+    fmt.Printf("HandleTown: No next trip entry. End of trip\n")
+    car.VelocityMph = 0
+  } else {
+    car.Location = &Location{
+      RoadId:        next.Id, // next location from a town is always a road
+      PositionMiles: 0,
     }
   }
+
+  car.LastLocationUpdateTimeUnix = time.Now().Unix()
+  err = dp.UpdateCar(car)
+  if err != nil {
+    fmt.Printf("Error: %v\n", err)
+  }
+
+  return nil
+}
+
+// handleRoad when a car is on a road
+func handleRoad(car Car) error {
+  if car.VelocityMph == 0 {
+    fmt.Printf("Car velocity is 0. Not updating position.\n")
+    return nil
+  }
+
+  ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+  // need road length
+  road, err := mapClient.GetRoad(ctx, &mgrpc.GetRoadRequest{
+    Id: car.Location.RoadId,
+  })
+  if err != nil {
+    return err
+  }
+
+  lastUpdate := time.Unix(car.LastLocationUpdateTimeUnix, 0)
+
+  now := time.Now()
+  diff := now.Sub(lastUpdate)
+
+  vmps := float64(car.VelocityMph / 3600)
+  newMiles := car.Location.PositionMiles + float32(vmps*diff.Seconds())
+  fmt.Printf("HandleRoad: Updating position to: %v...\n", newMiles)
+
+  // Handle the car going past the end of the road
+  if newMiles > float32(road.LengthMiles) {
+    fmt.Printf("HandleRoad: New position is past end of road\n")
+    next, err := nextTripEntry(car)
+    if err != nil {
+      return err
+    }
+    if next == nil {
+      // dunno.. trip should end with a town not a road but whatevs
+      fmt.Printf("HandleRoad: No next trip entry. End of trip\n")
+      car.VelocityMph = 0
+    } else {
+      fmt.Printf("HandleRoad: Next tripEntry is %+v\n", next)
+      car.Location = &Location{
+        TownId:        next.Id, // next from a road is always a town
+        PositionMiles: 0,
+      }
+    }
+  } else {
+    car.Location.PositionMiles = newMiles
+  }
+  car.LastLocationUpdateTimeUnix = now.Unix()
+  err = dp.UpdateCar(car)
+  if err != nil {
+    fmt.Printf("Error: %v\n", err)
+  }
+
+  return nil
 }

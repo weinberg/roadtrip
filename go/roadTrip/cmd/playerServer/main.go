@@ -262,26 +262,38 @@ func (*playerServer) GetCarTrip(ctx context.Context, request *grpc2.GetCarTripRe
   }
 
   var entries []*grpc2.TripEntry = []*grpc2.TripEntry{}
-  ctx, _ = context.WithTimeout(context.Background(), time.Second * 20)
-  for _,e := range ch.Car.Trip.Entries {
-    var displayName string
+  ctx, _ = context.WithTimeout(context.Background(), time.Second*20)
+  for _, e := range ch.Car.Trip.Entries {
+    tripEntry := grpc2.TripEntry{Type: e.Type}
     if e.Type == "road" {
-      fmt.Printf("Loading road with id %v\n", e.Id)
       road, err := mapClient.GetRoad(ctx, &mgrpc.GetRoadRequest{Id: e.Id})
       if err != nil {
         return nil, status.Errorf(codes.Internal, "Error loading a trip entry (road: %v) from db: ", e.Id, err)
       }
-      displayName = road.DisplayName
+      tripEntry.Road = &grpc2.Road{
+        Id:          road.Id,
+        DisplayName: road.DisplayName,
+        LengthMiles: road.LengthMiles,
+      }
     } else if e.Type == "town" {
       town, err := mapClient.GetTown(ctx, &mgrpc.GetTownRequest{Id: e.Id})
       if err != nil {
         return nil, status.Errorf(codes.Internal, "Error loading a trip entry (town: %v) from db: ", e.Id, err)
       }
-      displayName = town.DisplayName
+      tripEntry.Town = &grpc2.Town{
+        Id:          town.Id,
+        StateId:     town.StateId,
+        DisplayName: town.DisplayName,
+        Description: town.Description,
+      }
     }
 
     // entries = append(entries, &grpc2.TripEntry{ Id:   e.Id, Type: e.Type, DisplayName: displayName})
-    entries = append(entries, &grpc2.TripEntry{ Id: e.Id, Type: e.Type, DisplayName: displayName})
+    entries = append(entries, &tripEntry)
+  }
+
+  for _, e := range entries {
+    fmt.Printf("tripEntry: %+v\n", e)
   }
 
   return &grpc2.Trip{
@@ -298,8 +310,8 @@ func (*playerServer) GetTown(ctx context.Context, request *grpc2.GetTownRequest)
   }
   result := &grpc2.Town{
     Id:          town.Id,
-    StateId:     town.State,
-    TownName:    town.DisplayName,
+    StateId:     town.StateId,
+    DisplayName: town.DisplayName,
     Description: town.Description,
   }
   return result, nil

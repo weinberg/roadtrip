@@ -21,7 +21,7 @@ message Car {
   string plate = 2;
   string car_name = 3;
   Location location = 4; // singleton
-  int32 direction = 5;
+  float odometer_miles = 5;
   float velocity_mph = 6;
 }
 
@@ -55,6 +55,13 @@ message Trip {
   repeated TripEntry entries = 1;
 }
 
+message Update {
+  string state_name = 1;
+  string road_name = 2;
+  string town_name = 3;
+  Character character = 5;
+}
+
 /*************************************
  * Service
  ************************************/
@@ -67,8 +74,10 @@ service RoadTripPlayer  {
   rpc UpdateCharacter(UpdateCharacterRequest) returns (Character) {}
   rpc UpdateCar(UpdateCarRequest) returns (Car) {}
   rpc GetTown(GetTownRequest) returns (Town) {}
+  rpc GetRoad(GetRoadRequest) returns (Road) {}
   rpc GetCar(GetCarRequest) returns (Car) {}
   rpc GetCarTrip(GetCarTripRequest) returns (Trip) {}
+  rpc GetUpdate(GetUpdateRequest) returns (Update) {}
 }
 
 /*************************************
@@ -98,10 +107,17 @@ message GetTownRequest {
   string id = 1;
 }
 
+message GetRoadRequest {
+  string id = 1;
+}
+
 message GetCarRequest {
   string id = 1;
 }
 
 message GetCarTripRequest {
   string car_id = 1;
+}
+
+message GetUpdateRequest {
 }

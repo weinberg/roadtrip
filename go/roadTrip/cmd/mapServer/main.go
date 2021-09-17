@@ -10,7 +10,7 @@ import (
   "net"
 )
 
-const mongoURI = "mongodb://root:example@mongo-service:27017"
+const mongoURI = "mongodb://root:example@mapdb:27017"
 var dp mongoData.MongoProvider
 
 const (

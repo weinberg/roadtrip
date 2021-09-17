@@ -1,7 +1,8 @@
 #!/bin/bash
 
 PROJECT_BASE=`git rev-parse --show-toplevel`
-cd $PROJECT_BASE/go/roadTrip
+cd $PROJECT_BASE
 
-docker build -f docker/playerServer/Dockerfile . -t roadtrip/player-server
-docker build -f docker/mapServer/Dockerfile . -t roadtrip/map-server
+docker build -f docker/playerServer/Dockerfile go/roadTrip -t roadtrip/player-server
+docker build -f docker/mapServer/Dockerfile go/roadTrip -t roadtrip/map-server
+docker build -f docker/updateService/Dockerfile go/roadTrip -t roadtrip/update-service

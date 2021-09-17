@@ -1,0 +1,32 @@
+# Use root/example as user/password credentials
+version: '3.1'
+
+services:
+
+  mongo:
+    image: mongo
+    restart: always
+    networks:
+      default:
+        aliases:
+          - playerdb
+          - mapdb
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+
+  playerServer:
+    image: roadtrip/player-server
+    restart: always
+    ports:
+      - 9066:9066
+
+  mapServer:
+    image: roadtrip/map-server
+    restart: always
+
+  updateService:
+    image: roadtrip/update-service
+    restart: always

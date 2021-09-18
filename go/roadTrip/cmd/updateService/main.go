@@ -19,7 +19,7 @@ var mapClient mgrpc.RoadTripMapClient
 
 const (
 	port          = "9066"
-	mongoURI      = "mongodb://root:example@playerdb:27017"
+	mongoURI      = "mongodb://root:example@mongo-service:27017"
 	mapServerHost = "mapServer"
 	mapServerPort = "9067"
 )

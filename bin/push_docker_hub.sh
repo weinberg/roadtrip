@@ -23,3 +23,9 @@ image=`docker -c default images | grep "^roadtrip/update-service" | awk '{print 
 docker -c default tag ${image} 0x01/roadtrip-update-service
 docker -c default push 0x01/roadtrip-update-service
 
+# map-seed
+echo "map-seed-job"
+image=`docker -c default images | grep "^roadtrip/map-seed-job" | awk '{print $3}'`
+docker -c default tag ${image} 0x01/roadtrip-map-seed-job
+docker -c default push 0x01/roadtrip-map-seed-job
+

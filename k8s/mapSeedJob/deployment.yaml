@@ -1,0 +1,12 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: map-seed-job
+spec:
+  template:
+    spec:
+      containers:
+        - name: mapseed
+          image: 0x01/roadtrip-map-seed-job
+      restartPolicy: Never
+  backoffLimit: 4

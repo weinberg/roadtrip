@@ -1,5 +1,6 @@
 # Use root/example as user/password credentials
 version: '3.1'
+x-aws-vpc: vpc-0bc7d56fe80cbcd21
 
 services:
 
@@ -18,15 +19,15 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: example
 
   playerServer:
-    image: roadtrip/player-server
+    image: "477748957582.dkr.ecr.us-east-1.amazonaws.com/roadtrip/player-server"
     restart: always
     ports:
       - 9066:9066
 
   mapServer:
-    image: roadtrip/map-server
+    image: "477748957582.dkr.ecr.us-east-1.amazonaws.com/roadtrip/map-server"
     restart: always
 
   updateService:
-    image: roadtrip/update-service
+    image: "477748957582.dkr.ecr.us-east-1.amazonaws.com/roadtrip/update-service"
     restart: always

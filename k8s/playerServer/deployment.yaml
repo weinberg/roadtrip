@@ -6,8 +6,8 @@ metadata:
     app: docker-playerserver
 spec:
   ports:
-  - port: 9066
-    protocol: TCP
+    - port: 9066
+      protocol: TCP
   clusterIP: None
   selector:
     app: docker-playerserver
@@ -29,5 +29,34 @@ spec:
         app: docker-playerserver
     spec:
       containers:
-      - name: docker-playerserver
-        image: docker-playerserver
+        - name: docker-playerserver
+          image: 0x01/roadtrip-player-server
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
+  name: playerserver-ingress
+  namespace: default
+spec:
+  rules:
+    - host: playerserver-gprc.insofar.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: docker-playerserver
+                port:
+                  number: 9066
+  tls:
+    # This secret must exist beforehand
+    # The cert must also contain the subj-name grpctest.dev.mydomain.com
+    # https://github.com/kubernetes/ingress-nginx/blob/master/docs/examples/PREREQUISITES.md#tls-certificates
+    - secretName: playerserver-gprc.insofar.com
+      hosts:
+        - playerserver-gprc.insofar.com

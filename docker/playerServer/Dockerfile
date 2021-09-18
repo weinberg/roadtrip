@@ -21,7 +21,8 @@ ENV GOOS=linux
 ENV GOARCH=amd64
 ENV GOCACHE=/cache
 
-RUN --mount=type=cache,target=/cache go build -o /main /app/cmd/playerServer/main.go
+#RUN --mount=type=cache,target=/cache go build -o /main /app/cmd/playerServer/main.go
+RUN go build -o /main /app/cmd/playerServer/main.go
 
 ##
 ## Deploy

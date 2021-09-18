@@ -30,4 +30,4 @@ spec:
     spec:
       containers:
       - name: docker-updateservice
-        image: docker-updateservice
+        image: 0x01/roadtrip-update-service

@@ -22,10 +22,10 @@ build:
 deploy:
   kubectl:
     manifests:
-    - docker/mapServer/deployment.yaml
-    - docker/playerServer/deployment.yaml
-    - docker/updateService/deployment.yaml
-    - docker/mongodb/mongodb.yaml
+    - k8s/mapServer/deployment.yaml
+    - k8s/playerServer/deployment.yaml
+    - k8s/updateService/deployment.yaml
+    - k8s/mongodb/deployment.yaml
 portForward:
 - resourceType: service
   resourceName: docker-playerserver

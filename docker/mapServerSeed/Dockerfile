@@ -21,7 +21,7 @@ ENV GOOS=linux
 ENV GOARCH=amd64
 ENV GOCACHE=/cache
 
-RUN --mount=type=cache,target=/cache go build -o /main /app/cmd/mapServer/main.go
+RUN --mount=type=cache,target=/cache go build -o /main /app/cmd/mapServerSeed/main.go
 
 ##
 ## Deploy

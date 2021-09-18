@@ -30,4 +30,4 @@ spec:
     spec:
       containers:
       - name: docker-mapserver
-        image: docker-mapserver
+        image: 0x01/roadtrip-map-server

@@ -8,12 +8,12 @@ WORKDIR /app
 VOLUME /cache
 
 # Copy and download dependency using go mod
-COPY go.mod .
-COPY go.sum .
+COPY go/roadTrip/go.mod .
+COPY go/roadTrip/go.sum .
 RUN go mod download
 
 # Copy the code into the container
-COPY . .
+COPY go/roadTrip .
 
 # Build the application
 ENV CGO_ENABLED=0
@@ -21,7 +21,7 @@ ENV GOOS=linux
 ENV GOARCH=amd64
 ENV GOCACHE=/cache
 
-#RUN --mount=type=cache,target=/cache go build -o /main /app/cmd/playerServer/main.go
+RUN --mount=type=cache,target=/cache go build -o /main /app/cmd/playerServer/main.go
 RUN go build -o /main /app/cmd/playerServer/main.go
 
 ##
@@ -35,7 +35,8 @@ ENV GOARCH=amd64
 
 WORKDIR /
 
-COPY --from=build /main /main
+COPY --chown=nonroot:nonroot --from=build /main /main
+COPY --chown=nonroot:nonroot --from=build /app/certs /certs/
 
 EXPOSE 9066
 

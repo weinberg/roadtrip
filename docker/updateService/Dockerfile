@@ -8,12 +8,12 @@ WORKDIR /app
 VOLUME /cache
 
 # Copy and download dependency using go mod
-COPY go.mod .
-COPY go.sum .
+COPY go/roadTrip/go.mod .
+COPY go/roadTrip/go.sum .
 RUN go mod download
 
 # Copy the code into the container
-COPY . .
+COPY go/roadTrip .
 
 # Build the application
 ENV CGO_ENABLED=0

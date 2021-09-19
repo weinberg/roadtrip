@@ -32,7 +32,7 @@ func (p MongoProvider) Init (c Config) MongoProvider {
   ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
   err = client.Connect(ctx)
   if err != nil {
-    log.Fatal(err)
+    log.Fatal("mongoDataProvider:Init:", err)
   }
 
   database = client.Database(dbName)

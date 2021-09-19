@@ -1,33 +1,33 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: docker-updateservice
+  name: updateservice
   labels:
-    app: docker-updateservice
+    app: updateservice
 spec:
   ports:
   - port: 9068
     protocol: TCP
   clusterIP: None
   selector:
-    app: docker-updateservice
+    app: updateservice
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: docker-updateservice
+  name: updateservice
   labels:
-    app: docker-updateservice
+    app: updateservice
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: docker-updateservice
+      app: updateservice
   template:
     metadata:
       labels:
-        app: docker-updateservice
+        app: updateservice
     spec:
       containers:
-      - name: docker-updateservice
-        image: 0x01/roadtrip-update-service
+      - name: updateservice
+        image: roadtrip/update-service

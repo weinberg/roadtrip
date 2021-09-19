@@ -30,7 +30,7 @@ func init() {
 func main() {
   fmt.Println("Connecting to data provider...")
 
-  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://root:example@mongo-service:27017"))
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://root:example@localhost:27017"))
   if err != nil {
     log.Fatal(err)
   }

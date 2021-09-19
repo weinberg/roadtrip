@@ -7,16 +7,16 @@ build:
     useBuildkit: true
     concurrency: 4
   artifacts:
-  - image: docker-mapserver
-    context: go/roadTrip
+  - image: roadtrip/map-server
+    context: .
     docker:
       dockerfile: docker/mapServer/Dockerfile
-  - image: docker-playerserver
-    context: go/roadTrip
+  - image: roadtrip/player-server
+    context: .
     docker:
       dockerfile: docker/playerServer/Dockerfile
-  - image: docker-updateservice
-    context: go/roadTrip
+  - image: roadtrip/update-service
+    context: .
     docker:
       dockerfile: docker/updateService/Dockerfile
 deploy:
@@ -28,7 +28,7 @@ deploy:
     - k8s/mongodb/deployment.yaml
 portForward:
 - resourceType: service
-  resourceName: docker-playerserver
+  resourceName: playerserver
   port: 9066
 - resourceType: service
   resourceName: mongo-service

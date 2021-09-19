@@ -4,14 +4,9 @@ x-aws-vpc: vpc-0bc7d56fe80cbcd21
 
 services:
 
-  mongo:
+  mongo-service:
     image: mongo
     restart: always
-    networks:
-      default:
-        aliases:
-          - playerdb
-          - mapdb
     ports:
       - 27017:27017
     environment:
@@ -19,15 +14,15 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: example
 
   playerServer:
-    image: "477748957582.dkr.ecr.us-east-1.amazonaws.com/roadtrip/player-server"
+    image: "roadtrip/player-server"
     restart: always
     ports:
       - 9066:9066
 
   mapServer:
-    image: "477748957582.dkr.ecr.us-east-1.amazonaws.com/roadtrip/map-server"
+    image: "roadtrip/map-server"
     restart: always
 
   updateService:
-    image: "477748957582.dkr.ecr.us-east-1.amazonaws.com/roadtrip/update-service"
+    image: "roadtrip/update-service"
     restart: always

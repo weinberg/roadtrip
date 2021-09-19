@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
+	"flag"
 	"fmt"
 	mgrpc "github.com/brickshot/roadtrip/internal/mapServer/grpc"
 	. "github.com/brickshot/roadtrip/internal/playerServer"
@@ -10,6 +12,7 @@ import (
 	"github.com/brickshot/roadtrip/internal/playerServer/mongoData"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"log"
@@ -37,28 +40,50 @@ type playerServer struct {
  *
  ******************************/
 
+var tlsDisabled bool
+
+func init() {
+	flag.BoolVar(&tlsDisabled, "tls", false, "If false, use TLS. Defaults to false.")
+}
+
 func main() {
-	fmt.Println("PlayerServer started")
+	fmt.Printf("PlayerServer started...\n")
 	address := "0.0.0.0" + ":" + port
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
 		log.Fatalf("Error %v", err)
 	}
-	fmt.Printf("Server is listening on %v...", address)
+	fmt.Printf("Server is listening on %v...\n", address)
 
-	fmt.Printf("Connecting to data provider...")
+	fmt.Printf("Connecting to data provider...\n")
 
 	// MongoData
 	dp = mongoData.MongoProvider{}.Init(mongoData.Config{URI: mongoURI})
 	defer dp.Shutdown()
 
+	var s *grpc.Server
+
+	if !tlsDisabled {
+		fmt.Printf("TLS enabled\n")
+		tlsCredentials, err := loadTLSCredentials()
+		if err != nil {
+			log.Fatal("cannot load TLS credentials: ", err)
+		}
+		fmt.Printf("Found credentials\n")
+		s = grpc.NewServer(
+			grpc.Creds(tlsCredentials),
+		)
+	} else {
+		fmt.Printf("TLS disabled\n")
+		s = grpc.NewServer()
+	}
+
+	pgrpc.RegisterRoadTripPlayerServer(s, &playerServer{})
+
 	// MapClient
 	setupMapClient()
 
-	s := grpc.NewServer()
-	pgrpc.RegisterRoadTripPlayerServer(s, &playerServer{})
-
-	fmt.Println("Ready")
+	fmt.Println("Ready\n")
 
 	s.Serve(lis)
 }
@@ -90,6 +115,22 @@ func getUUID(ctx context.Context) (string, error) {
 		return val[0], nil
 	}
 	return "", errors.New("UUID not in metadata")
+}
+
+func loadTLSCredentials() (credentials.TransportCredentials, error) {
+	// Load server's certificate and private key
+	serverCert, err := tls.LoadX509KeyPair("/certs/server-cert.pem", "/certs/server-key.pem")
+	if err != nil {
+		return nil, err
+	}
+
+	// Create the credentials and return it
+	config := &tls.Config{
+		Certificates: []tls.Certificate{serverCert},
+		ClientAuth:   tls.NoClientCert,
+	}
+
+	return credentials.NewTLS(config), nil
 }
 
 /******************************

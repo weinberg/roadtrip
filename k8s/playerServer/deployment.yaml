@@ -6,11 +6,12 @@ metadata:
     app: playerserver
 spec:
   ports:
-    - port: 9066
+    - port: 80
       protocol: TCP
-  clusterIP: None
+      targetPort: 9066
   selector:
     app: playerserver
+  type: ClusterIP
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -30,4 +31,27 @@ spec:
     spec:
       containers:
         - name: playerserver
-          image: roadtrip/player-server
+          image: 0x01/roadtrip-player-server
+          ports:
+            - containerPort: 9066
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
+  name: roadtrip-ingress
+spec:
+  ingressClassName: "nginx"
+  rules:
+    - host: playerserver.roadtrip.insofar.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: playerserver
+                port:
+                  number: 80

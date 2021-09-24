@@ -105,7 +105,7 @@ func DeleteCharacterInfo(id string) (ClientConfig, error) {
 // initConfig writes a new config file.
 func initConfig() error {
   newConfig := ClientConfig{
-    Server:     "playerserver-grpc.roadtrip.insofar.com",
+    Server:     "playerserver.roadtrip.insofar.com",
     Port:       "9066",
     Characters: []CharacterInfo{},
   }

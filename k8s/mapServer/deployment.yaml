@@ -30,4 +30,4 @@ spec:
     spec:
       containers:
       - name: mapserver
-        image: roadtrip/map-server
+        image: 0x01/roadtrip-map-server

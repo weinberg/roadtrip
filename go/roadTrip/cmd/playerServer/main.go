@@ -40,10 +40,10 @@ type playerServer struct {
  *
  ******************************/
 
-var tlsDisabled bool
+var tlsEnabled bool
 
 func init() {
-	flag.BoolVar(&tlsDisabled, "tls", false, "If false, use TLS. Defaults to false.")
+	flag.BoolVar(&tlsEnabled, "tls", false, "If true, use TLS. Defaults to false.")
 }
 
 func main() {
@@ -63,7 +63,7 @@ func main() {
 
 	var s *grpc.Server
 
-	if !tlsDisabled {
+	if tlsEnabled {
 		fmt.Printf("TLS enabled\n")
 		tlsCredentials, err := loadTLSCredentials()
 		if err != nil {

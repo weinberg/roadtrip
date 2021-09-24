@@ -30,4 +30,4 @@ spec:
     spec:
       containers:
       - name: updateservice
-        image: roadtrip/update-service
+        image: 0x01/roadtrip-update-service
